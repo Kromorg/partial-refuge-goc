@@ -325,7 +325,7 @@ fdiv<- ggplot(funct_diversity,
 multi <- grid.arrange(fric, fori, fdiv,
              ncol = 3, nrow = 1)
 
-ggsave('Figs/Figure 3.tiff', plot = multi,
+ggsave('Figs/Figure 3.jpg', plot = multi,
        width = 6560, height = 3440, units = 'px', dpi = 320)
 #ggsave(here:: here('Figs/Functional diversity between zones.tiff'),
 #       plot = multi, width = 6560, height = 3440, units = 'px',
@@ -413,7 +413,7 @@ names(cols) <- zone
 
 labels_fig_cv <- c("No. spp.", "No. FE", "Vol.")
 
-tiff(filename = "Figs/Figure 2.tiff",
+jpg(filename = "Figs/Figure 2.jpg",
      height = 7500, width = 5700,
      antialias = 'cleartype', res = 320, pointsize = 36)
 #tiff(filename = here:: here("Figs/Figure 2.tiff"),
@@ -512,7 +512,7 @@ fdiv.plot<- alpha.fd.multidim(
                   asb2 =  '#27408B'))
 fdiv.plot
 
-ggsave('Figs/Appendix S3.tiff', width = 4280, height = 3536,
+ggsave('Figs/Appendix S3.jpg', width = 4280, height = 3536,
        units = 'px',  dpi = 320)
 #ggsave(here:: here('Figs/FEs distribution.tiff'), width = 4280, height = 3536,
 #       units = 'px',  dpi = 320)
@@ -758,7 +758,7 @@ fd.entro<- ggplot(hill.div,
 hill <- grid.arrange(rich, fd.rich, entro, fd.entro,
              ncol = 2, nrow = 2)
 
-ggsave('Figs/Figure 4.tiff', plot = hill,
+ggsave('Figs/Figure 4.jpg', plot = hill,
        width = 5500, height = 4700, units = 'px', dpi = 320)
 #ggsave(here:: here('Figs/Figure 4.tiff'), plot = hill,
 #       width = 5500, height = 4700, units = 'px', dpi = 320)
