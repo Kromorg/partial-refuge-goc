@@ -7,8 +7,8 @@ Manuel Francisco Velasco-Lozano<sup>1</sup>, Georgina Ramírez-Ortiz<sup>2</sup>
 Corresponding author: Georgina Ramírez-Ortiz, gramirezortiz@ola.icmyl.unam.mx
 
 ## Institutions
-<sup>1</sup> Departamento de Ecología Marina, Centro de Investigación Científica y de Educación Superior de Ensenada, Laboratorio de Esclerocronología, Ecología y Pesquerías de la Zona Costera
-<sup>2</sup> Unidad Académica Mazatlán, Instituto de Ciencias del Mar y Limnología, Universidad Nacional Autónoma de México, Laboratorio de Ecología funcional & conservación marina
+<sup>1</sup> Departamento de Ecología Marina, Centro de Investigación Científica y de Educación Superior de Ensenada, Laboratorio de Esclerocronología, Ecología y Pesquerías de la Zona Costera;
+<sup>2</sup> Unidad Académica Mazatlán, Instituto de Ciencias del Mar y Limnología, Universidad Nacional Autónoma de México, Laboratorio de Ecología funcional & conservación marina;
 <sup>3</sup> División de Ciencias de la Salud, Biológicas y Ambientales, Universidad Abierta y a Distancia de México
 
 ## Summary
