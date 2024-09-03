@@ -14,11 +14,11 @@ origin <- read.csv('Data/Abundance data.csv',
 as_tibble(origin)
 
 # Set variable "Year" to factor
-origin$Year<- as.factor(origin$Year)
+origin$Year <- as.factor(origin$Year)
 as_tibble(origin)
 
 # Data between zones ####
-data.between<- origin %>%
+data.between <- origin %>%
   filter(as.numeric(Year) >= '2021')
 
 
@@ -36,70 +36,66 @@ data.between$Zone[is.na(data.between$Zone)]<- 'Shallow'
 which(is.na(data.between$Zone))
 
 # Change zone data into factor type
-data.between$Zone<- factor(data.between$Zone,
+data.between$Zone <- factor(data.between$Zone,
                            levels = c('Shallow', 'Mesophotic'),
                            ordered = T)
 
 # Taxonomic classification
-taxonomy<- read.csv('Data/Classification.csv', header = TRUE,
+taxonomy <- read.csv('Data/Classification.csv', header = TRUE,
                     row.names = 1)
 
+
 # Indices estimation ####
+# Select data from shallow and mesophotic reefs ####
+# Shallow reefs
+data.shallow <- data.between %>% filter(Zone == 'Shallow')%>% 
+  select(Abudefduf_troschelii:Zapteryx_exasperata) %>% droplevels()
+rownames(data.shallow)<-  data.between[data.between$Zone == 'Shallow', 6]
 
-# Estimation of taxonomic distances 
-taxdis<-taxa2dist(taxonomy, varstep = TRUE)
-spp_per_transt<- pres_data[, c(4:76)]
-rownames(spp_per_transt)<- pres_data[, 3]
-mod<- taxondive(spp_per_transt, taxdis)
-delta<- mod$D
-delta[is.na(mod$D)]<- 0
-round(mean(delta),2); round(sd(delta)/sqrt(length(delta)),2)
+# Looking for absent species
+which(colSums(data.shallow) == 0)
+data.shallow <- data.shallow[, -c(5, 11, 17, 37:38, 41, 48, 50, 57,
+                                  65:67, 71, 75, 83, 85, 88:89, 98:99,
+                                  101, 103)]
 
-# Transectos de Espíritu Santo ####
-transt_ES<- spp_per_transt[36:66, ]
-mod<- taxondive(transt_ES, taxdis)
-delta<- mod$D
-delta[is.na(delta)]<- 0
-round(mean(delta),2); round(sd(delta)/sqrt(length(delta)),2)
+# Mesophotic reefs
+data.meso <- data.between %>% filter(Zone == 'Mesophotic')%>% 
+  select(Abudefduf_troschelii:Zapteryx_exasperata) %>% droplevels()
+rownames(data.meso)<- data.between[data.between$Zone == 'Mesophotic', 6]
 
-# Transectos de Cerralvo ####
-transt_CE<- spp_per_transt[1:10, ]
-mod<- taxondive(transt_CE, taxdis)
-delta<- mod$D
-delta[is.na(delta)]<- 0
-round(mean(delta),2); round(sd(delta)/sqrt(length(delta)),2)
+# Looking for absent species
+which(colSums(data.meso) == 0)
+data.meso <- data.meso[, -c(1, 3, 5, 16:17, 19:20, 25, 30:31, 33:35,
+                            43, 45, 48, 50, 53:55, 57, 63:64, 67:68,
+                            74, 77:79, 80:82, 89, 91, 93, 102)]
 
-# Transectos de San Benedicto
-transt_SB<- spp_per_transt[67:75, ]
-mod<- taxondive(transt_SB, taxdis)
-delta<- mod$D
-delta[is.na(delta)]<- 0
-round(mean(delta),2); round(sd(delta)/sqrt(length(delta)),2)
+# Estimation of taxonomic distances
+# Shallow reefs
+taxdis.shallow <- taxonomy[rownames(taxonomy) %in%
+                             colnames(data.shallow), ] %>% 
+  taxa2dist(., varstep = TRUE)
 
-# Transectos de Socorro ####
-transt_SOC<- spp_per_transt[76:78, ]
-mod<- taxondive(transt_SOC, taxdis)
-delta<- mod$D
-delta[is.na(delta)]<- 0
-round(mean(delta),2); round(sd(delta)/sqrt(length(delta)),2)
+# Mesophotic reefs
+taxdis.meso <- taxonomy[rownames(taxonomy) %in%
+                          colnames(data.meso), ] %>% 
+  taxa2dist(., varstep = TRUE)
 
-# Transectos de Clarión ####
-transt_CL<- spp_per_transt[11:35, ]
-mod<- taxondive(transt_CL, taxdis)
-delta<- mod$D
-delta[is.na(delta)]<- 0
-round(mean(delta),2); round(sd(delta)/sqrt(length(delta)),2)
+# -------------------------------------------------------------- ####
+# "varstep" argument determines whether the path length between two
+# randomly chosen species levels in the taxonomic classification will
+# be separated equally or proportionally as taxon richness decreases
+# at each step until the linking division.
+# -------------------------------------------------------------- ####
 
-# Transectos islas continentales
-transt_ic<- spp_per_transt[c(1:10, 36:66), ]
-mod<- taxondive(transt_ic, taxdis)
-delta<- mod$D
-delta[is.na(delta)]<- 0
-round(mean(delta),2); round(sd(delta)/sqrt(length(delta)),2)
+# Estimation of taxonomic distinctness
 
-# Transectos islas oceánicas
-transt_io<- spp_per_transt[c(11:35, 67:78), ]
-mod<- taxondive(transt_io, taxdis)
-delta<- mod$D
-delta[is.na(delta)]<- 0
-round(mean(delta),2); round(sd(delta)/sqrt(length(delta)),2)
+# Shallow reefs
+tax.shallow <- taxondive(data.shallow, taxdis.shallow)
+delta.shallow<- tax.shallow$Dstar
+round(mean(delta.shallow),2); round(sd(delta.shallow)/sqrt(length(delta.shallow)),2)
+
+# Mesophotic reefs
+tax.meso <- taxondive(data.meso, taxdis.meso)
+delta.meso<- tax.meso$Dstar
+delta.meso[is.na(tax.meso$Dstar)]<- 0
+round(mean(delta.meso),2); round(sd(delta.meso)/sqrt(length(delta.meso)),2)
