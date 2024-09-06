@@ -560,7 +560,7 @@ hill.fd.q1<- alpha.fd.hill(asb_sp_w = as.matrix(sub.abundance),
               q = 1,
               tau = 'mean')$asb_FD_Hill
 
-# Merge ---- Fallo por desigualdad de filas
+# Merge
 hill.div <- data.frame(tax.rich = hill.tax.q0[, 1],
                        tax.entro = hill.tax.q1[, 1],
                        fd.rich = hill.fd.q0[, 1],
