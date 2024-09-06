@@ -2,9 +2,11 @@
 pacman:: p_load(tidyverse, # Data wrangling
                 ggplot2, # Graphs
                 gridExtra, # Multiple plots
+                mvabund, # Multivariate analysis
                 mFD, elbow, # Functional diversity
                 geometry, # Compute convex hull
-                tripack) # Vertices triangulation (plot)
+                tripack, # Vertices triangulation (plot)
+                ggfortify) # Model assumption graphs
 
 rm(list = ls())
 shell('cls')
@@ -50,6 +52,9 @@ data.between$Zone<- factor(data.between$Zone,
 # Taxonomic classification
 taxonomy <- read.csv('Data/Classification.csv', header = TRUE,
                      row.names = 1)
+#taxonomy <- read.csv(here:: here('Data/Classification.csv'),
+#header = TRUE, row.names = 1)
+
 
 # Select data from shallow and mesophotic reefs
 # Shallow reefs
