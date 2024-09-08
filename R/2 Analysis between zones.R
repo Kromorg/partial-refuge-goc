@@ -26,7 +26,7 @@ as_tibble(origin)
 
 # Data between zones ####
 data.between<- origin %>%
-  filter(as.numeric(Year) >= '2021')
+  filter(as.numeric(Year) >= '2021') %>% droplevels()
 
 
 # Set depth zones based on the light processing file ####
@@ -47,6 +47,31 @@ data.between$Zone<- factor(data.between$Zone,
                            levels = c('Shallow', 'Mesophotic'),
                            ordered = T)
 
+
+# Multivariate analysis ####
+# Creating objects to run the functions ####
+
+# Subset abundance data
+abundance <- data.between[, c(7:109)]
+rownames(abundance) <- data.between[, 6]
+
+# Testing if environmental variables have an effect on the abundance
+# of fish species
+mv.data <- data.between %>% select(Zone, Year, Season) %>% as.list()
+mv.data$Fish <- abundance %>%  as.matrix()
+
+# Model
+species.mod <- manyglm(Fish ~ Zone*Year*Season,
+                       data = mv.data, family = 'poisson')
+
+# Model assumptions
+plot(species.mod)
+meanvar.plot()
+
+# Model results
+anova.manyglm(species.mod)
+summary.manyglm(species.mod)
+drop1(species.mod)
 
 # Taxonomic distinctness ####
 # Taxonomic classification
@@ -110,10 +135,6 @@ delta.meso[is.na(tax.meso$Dstar)]<- 0
 
 
 # Functional diversity analysis ####
-# Subset abundance data
-abundance<- data.between[, c(7:109)]
-rownames(abundance)<- data.between[, 6]
-
 # Abundance summary
 asb.sp.summary(as.matrix(abundance))
 
