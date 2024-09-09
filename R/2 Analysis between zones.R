@@ -3,6 +3,7 @@ pacman:: p_load(tidyverse, # Data wrangling
                 ggplot2, # Graphs
                 gridExtra, # Multiple plots
                 mvabund, # Multivariate analysis
+                vegan, # Taxonomic distinctness
                 mFD, elbow, # Functional diversity
                 geometry, # Compute convex hull
                 tripack, # Vertices triangulation (plot)
@@ -66,7 +67,6 @@ species.mod <- manyglm(Fish ~ Zone*Year*Season,
 
 # Model assumptions
 plot(species.mod)
-meanvar.plot()
 
 # Model results
 anova.manyglm(species.mod)
@@ -79,7 +79,6 @@ taxonomy <- read.csv('Data/Classification.csv', header = TRUE,
                      row.names = 1)
 #taxonomy <- read.csv(here:: here('Data/Classification.csv'),
 #header = TRUE, row.names = 1)
-
 
 # Select data from shallow and mesophotic reefs
 # Shallow reefs
@@ -132,6 +131,21 @@ delta.shallow<- tax.shallow$Dstar
 tax.meso <- taxondive(data.meso, taxdis.meso)
 delta.meso<- tax.meso$Dstar
 delta.meso[is.na(tax.meso$Dstar)]<- 0
+
+# Validation of assumptions
+# Normality
+shapiro.test(delta.shallow) # Non normal
+shapiro.test(delta.meso) # Non normal
+
+# Homoscedasticity
+var(delta.shallow)/var(delta.meso)
+
+var.test(delta.shallow, delta.meso,
+         ratio = 1, alternative = 'l') # Heteroskedasticity
+
+# Statistical test
+wilcox.test(delta.shallow, delta.meso,
+            paired = F, alternative = 'g', correct = T) # p< 0.05
 
 
 # Functional diversity analysis ####
