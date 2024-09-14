@@ -2,12 +2,12 @@
 pacman:: p_load(tidyverse, # Data wrangling
                 ggplot2, # Graphs
                 gridExtra, # Multiple plots
-                mvabund, # Multivariate analysis
+                lme4, # GLMMs
                 vegan, # Taxonomic distinctness
                 mFD, elbow, # Functional diversity
                 geometry, # Compute convex hull
                 tripack, # Vertices triangulation (plot)
-                ggfortify) # Model assumption graphs
+                ggResidpanel) # Model assumption graphs
 
 rm(list = ls())
 shell('cls')
@@ -72,6 +72,67 @@ plot(species.mod)
 anova.manyglm(species.mod)
 summary.manyglm(species.mod)
 drop1(species.mod)
+
+
+# GLMM test ####
+
+ejemplo <- labdsv:: dematrify(abundance) %>% 
+  rename(Video.transect = sample, Species = species,
+         Abundance = abundance)
+
+# Merging data ####
+samples <- ejemplo$Video.transect
+factors <- matrix(nrow = length(samples), ncol = 3)
+
+# Determine zone for each row
+for (n in 1:length(samples)) {
+  actual <- samples[n]
+  extant <- which(data.between$Video.transect == actual)
+  if(length(extant) > 0){
+    value <- data.between$Zone[extant] %>% as.character()
+    factors[n, 1] <- value
+  } else {
+    factors[n, 1] <-  NA
+  }
+}
+
+# Determine season for each row
+for (n in 1:length(samples)) {
+  actual <- samples[n]
+  extant <- which(data.between$Video.transect == actual)
+  if(length(extant) > 0){
+    value <- data.between$Season[extant] %>% as.character()
+    factors[n, 2] <- value
+  } else {
+    factors[n, 2] <-  NA
+  }
+}
+
+# Determine site for each row
+for (n in 1:length(samples)) {
+  actual <- samples[n]
+  extant <- which(data.between$Video.transect == actual)
+  if(length(extant) > 0){
+    value <- data.between$Site[extant] %>% as.character()
+    factors[n, 3] <- value
+  } else {
+    factors[n, 3] <-  NA
+  }
+}
+
+# Merged data
+ejemplo <- data.frame(Zone = factors[, 1],
+                      Season = factors[, 2],
+                      Site = factors[, 3], ejemplo)
+
+
+
+# GLMM
+glmm.mod <- glmer(Abundance ~ Zone + (1|Season) + (1|Site),
+                         data = ejemplo, family = poisson)
+summary(glmm.mod)
+resid_panel(glmm.mod)
+
 
 # Taxonomic distinctness ####
 # Taxonomic classification
