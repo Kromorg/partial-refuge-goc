@@ -2,7 +2,7 @@
 pacman:: p_load(tidyverse, # Data wrangling
                 ggplot2, # Graphs
                 gridExtra, # Multiple plots
-                lme4, # GLMMs
+                lme4, mvabund, # GLMMs
                 vegan, # Taxonomic distinctness
                 mFD, elbow, # Functional diversity
                 geometry, # Compute convex hull
@@ -61,27 +61,25 @@ rownames(abundance) <- data.between[, 6]
 mv.data <- data.between %>% select(Zone, Year, Season) %>% as.list()
 mv.data$Fish <- abundance %>%  as.matrix()
 
-# Model
-species.mod <- manyglm(Fish ~ Zone*Year*Season,
+# Multivariate model
+species.mod <- manyglm(Fish ~ Zone,
                        data = mv.data, family = 'poisson')
 
-# Model assumptions
+# Model visual assumptions
 plot(species.mod)
 
 # Model results
-anova.manyglm(species.mod)
+anova.manyglm(species.mod, p.uni = 'adjusted')
 summary.manyglm(species.mod)
-drop1(species.mod)
 
 
 # GLMM test ####
-
-ejemplo <- labdsv:: dematrify(abundance) %>% 
+diversity.metrics <- labdsv:: dematrify(abundance) %>% 
   rename(Video.transect = sample, Species = species,
          Abundance = abundance)
 
 # Merging data ####
-samples <- ejemplo$Video.transect
+samples <- diversity.metrics$Video.transect
 factors <- matrix(nrow = length(samples), ncol = 3)
 
 # Determine zone for each row
@@ -121,17 +119,17 @@ for (n in 1:length(samples)) {
 }
 
 # Merged data
-ejemplo <- data.frame(Zone = factors[, 1],
+diversity.metrics <- data.frame(Zone = factors[, 1],
                       Season = factors[, 2],
-                      Site = factors[, 3], ejemplo)
+                      Site = factors[, 3], diversity.metrics)
 
 
 
 # GLMM
-glmm.mod <- glmer(Abundance ~ Zone + (1|Season) + (1|Site),
-                         data = ejemplo, family = poisson)
-summary(glmm.mod)
-resid_panel(glmm.mod)
+glmm.ab.mod <- glmer(Abundance ~ Zone + (1|Season) + (1|Site),
+                         data = diversity.metrics, family = poisson)
+summary(glmm.ab.mod)
+resid_panel(glmm.ab.mod)
 
 
 # Taxonomic distinctness ####
