@@ -2,7 +2,7 @@
 pacman:: p_load(tidyverse, # Data wrangling
                 ggplot2, # Graphs
                 gridExtra, # Multiple plots
-                lme4, mvabund, # GLMMs
+                mvabund, lme4, # Multivariate analysis and GLMMs
                 vegan, # Taxonomic distinctness
                 mFD, elbow, # Functional diversity
                 geometry, # Compute convex hull
@@ -58,11 +58,12 @@ rownames(abundance) <- data.between[, 6]
 
 # Testing if environmental variables have an effect on the abundance
 # of fish species
-mv.data <- data.between %>% select(Zone, Year, Season) %>% as.list()
+mv.data <- data.between %>% select(Zone, Year, Season, Site) %>%
+  droplevels() %>% as.list()
 mv.data$Fish <- abundance %>%  as.matrix()
 
 # Multivariate model
-species.mod <- manyglm(Fish ~ Zone,
+species.mod <- manyglm(Fish ~ Zone*Year*Season*Site,
                        data = mv.data, family = 'poisson')
 
 # Model visual assumptions
@@ -73,57 +74,38 @@ anova.manyglm(species.mod, p.uni = 'adjusted')
 summary.manyglm(species.mod)
 
 
-# GLMM test ####
-diversity.metrics <- labdsv:: dematrify(abundance) %>% 
+# Create base object to save diversity indices ####
+diversity.metrics <- data.between %>% 
+  select(Year, Season, Site, Zone, Video.transect)
+
+long.abund <- labdsv:: dematrify(abundance) %>% 
   rename(Video.transect = sample, Species = species,
-         Abundance = abundance)
+         Abundance = abundance) %>% group_by(Video.transect) %>% 
+  reframe(Abundance = sum(Abundance))
 
-# Merging data ####
+# Merging data
 samples <- diversity.metrics$Video.transect
-factors <- matrix(nrow = length(samples), ncol = 3)
+extract <- matrix(nrow = length(samples), ncol = 1)
 
-# Determine zone for each row
+# Extract overall abundance for each videotransect
 for (n in 1:length(samples)) {
   actual <- samples[n]
-  extant <- which(data.between$Video.transect == actual)
+  extant <- which(samples == actual)
   if(length(extant) > 0){
-    value <- data.between$Zone[extant] %>% as.character()
-    factors[n, 1] <- value
+    value <- long.abund$Abundance[extant] %>% as.numeric()
+    extract[n, 1] <- value
   } else {
-    factors[n, 1] <-  NA
+    extract[n, 1] <-  NA
   }
 }
-
-# Determine season for each row
-for (n in 1:length(samples)) {
-  actual <- samples[n]
-  extant <- which(data.between$Video.transect == actual)
-  if(length(extant) > 0){
-    value <- data.between$Season[extant] %>% as.character()
-    factors[n, 2] <- value
-  } else {
-    factors[n, 2] <-  NA
-  }
-}
-
-# Determine site for each row
-for (n in 1:length(samples)) {
-  actual <- samples[n]
-  extant <- which(data.between$Video.transect == actual)
-  if(length(extant) > 0){
-    value <- data.between$Site[extant] %>% as.character()
-    factors[n, 3] <- value
-  } else {
-    factors[n, 3] <-  NA
-  }
-}
+extract[is.na(extract)]<- 0
 
 # Merged data
-diversity.metrics <- data.frame(Zone = factors[, 1],
-                      Season = factors[, 2],
-                      Site = factors[, 3], diversity.metrics)
+diversity.metrics <- data.frame(diversity.metrics,
+                                Abundance = extract)
 
-
+# Remove objects
+rm(mv.data, species.mod, long.abund, extract)
 
 # GLMM
 glmm.ab.mod <- glmer(Abundance ~ Zone + (1|Season) + (1|Site),
@@ -184,27 +166,13 @@ taxdis.meso <- taxonomy[rownames(taxonomy) %in%
 
 # Shallow reefs
 tax.shallow <- taxondive(data.shallow, taxdis.shallow)
-delta.shallow<- tax.shallow$Dstar
+delta.shallow<- tax.shallow$Dstar %>% as.data.frame()
 
 # Mesophotic reefs
 tax.meso <- taxondive(data.meso, taxdis.meso)
-delta.meso<- tax.meso$Dstar
-delta.meso[is.na(tax.meso$Dstar)]<- 0
+delta.meso <- tax.meso$Dstar %>% as.data.frame()
 
-# Validation of assumptions
-# Normality
-shapiro.test(delta.shallow) # Non normal
-shapiro.test(delta.meso) # Non normal
 
-# Homoscedasticity
-var(delta.shallow)/var(delta.meso)
-
-var.test(delta.shallow, delta.meso,
-         ratio = 1, alternative = 'l') # Heteroskedasticity
-
-# Statistical test
-wilcox.test(delta.shallow, delta.meso,
-            paired = F, alternative = 'g', correct = T) # p< 0.05
 
 
 # Functional diversity analysis ####
