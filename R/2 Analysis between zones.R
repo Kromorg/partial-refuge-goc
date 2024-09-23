@@ -3,6 +3,7 @@ pacman:: p_load(tidyverse, # Data wrangling
                 ggplot2, # Graphs
                 gridExtra, # Multiple plots
                 mvabund, lme4, # Multivariate analysis and GLMMs
+                labdsv, # Convert wide to long format
                 vegan, # Taxonomic distinctness
                 mFD, elbow, # Functional diversity
                 geometry, # Compute convex hull
@@ -70,48 +71,29 @@ species.mod <- manyglm(Fish ~ Zone*Year*Season*Site,
 plot(species.mod)
 
 # Model results
-anova.manyglm(species.mod, p.uni = 'adjusted')
-summary.manyglm(species.mod)
+results.mod <- anova.manyglm(species.mod, p.uni = 'adjusted')
+results.mod
+summary.mod <- summary.manyglm(species.mod)
+summary.mod
 
 
 # Create base object to save diversity indices ####
 diversity.metrics <- data.between %>% 
   select(Year, Season, Site, Zone, Video.transect)
 
-long.abund <- labdsv:: dematrify(abundance) %>% 
+long.abund <- dematrify(abundance) %>% 
   rename(Video.transect = sample, Species = species,
          Abundance = abundance) %>% group_by(Video.transect) %>% 
-  reframe(Abundance = sum(Abundance))
+  reframe(Richness = length(unique(Species)),
+          Abundance = sum(Abundance))
 
 # Merging data
-samples <- diversity.metrics$Video.transect
-extract <- matrix(nrow = length(samples), ncol = 1)
-
-# Extract overall abundance for each videotransect
-for (n in 1:length(samples)) {
-  actual <- samples[n]
-  extant <- which(samples == actual)
-  if(length(extant) > 0){
-    value <- long.abund$Abundance[extant] %>% as.numeric()
-    extract[n, 1] <- value
-  } else {
-    extract[n, 1] <-  NA
-  }
-}
-extract[is.na(extract)]<- 0
-
-# Merged data
-diversity.metrics <- data.frame(diversity.metrics,
-                                Abundance = extract)
+diversity.metrics <- diversity.metrics %>%
+  left_join(long.abund, by = 'Video.transect')
+diversity.metrics[is.na(diversity.metrics)]<- 0
 
 # Remove objects
-rm(mv.data, species.mod, long.abund, extract)
-
-# GLMM
-glmm.ab.mod <- glmer(Abundance ~ Zone + (1|Season) + (1|Site),
-                         data = diversity.metrics, family = poisson)
-summary(glmm.ab.mod)
-resid_panel(glmm.ab.mod)
+rm(mv.data, species.mod, long.abund)
 
 
 # Taxonomic distinctness ####
@@ -171,8 +153,18 @@ delta.shallow<- tax.shallow$Dstar %>% as.data.frame()
 # Mesophotic reefs
 tax.meso <- taxondive(data.meso, taxdis.meso)
 delta.meso <- tax.meso$Dstar %>% as.data.frame()
+delta.meso[is.na(delta.meso)] <- 0
 
+# Merging data
+delta.data <- rbind(delta.shallow, delta.meso) %>%
+  rownames_to_column(., 'Video.transect') %>%
+  rename(Distinctness = ".")
+diversity.metrics <- diversity.metrics %>%
+  left_join(delta.data, by = 'Video.transect')
 
+# Remove objects
+rm(taxonomy, data.shallow, taxdis.shallow, data.meso, taxdis.meso,
+   delta.shallow, delta.meso, delta.data, tax.shallow, tax.meso)
 
 
 # Functional diversity analysis ####
@@ -299,167 +291,10 @@ indices<- alpha.fd.multidim(
   ind_vect = c('fric', 'fori', 'fdiv'),
   scaling = T, check_input = T, details_returned = T)
 
-funct_diversity<- indices$functional_diversity_indices
-
-
-# Statystical analysis ####
-# Add factors to assess considering video-transects with less
-# than six unique FE
-Year<- data.between[data.between$Video.transect %in%
-             rownames(funct_diversity), 2]
-Zone<- data.between[data.between$Video.transect %in%
-              rownames(funct_diversity), 110]
-Season<-  data.between[data.between$Video.transect %in%
-                    rownames(funct_diversity), 3]
-Site<- data.between[data.between$Video.transect %in%
-               rownames(funct_diversity), 1]
-
-# Create an object including the indices and factors 
-funct_diversity<- cbind(Year, Zone, Season, Site,
-                        funct_diversity)
-
-glimpse(funct_diversity)
-
-# Summary per zone
-indices.zones<- funct_diversity %>%
-  group_by(Zone) %>%
-  summarise(MeanFRic = round(mean(fric), 2),
-            SD.FRic = round(sd(fric), 2),
-            MeanFOri = round(mean(fori), 2),
-            SD.FOri = round(sd(fori), 2),
-            MeanFDiv = round(mean(fdiv), 2),
-            SD.FDiv = round(sd(fdiv), 2))
-as_tibble(indices.zones)
-
-# Summary per zone and site
-indices.sites<- funct_diversity %>%
-  group_by(Zone, Site) %>%
-  summarise(MeanFRic = round(mean(fric), 2),
-            SD.FRic = round(sd(fric), 2),
-            MeanFOri = round(mean(fori), 2),
-            SD.FOri = round(sd(fori), 2),
-            MeanFDiv = round(mean(fdiv), 2),
-            SD.FDiv = round(sd(fdiv), 2))
-as_tibble(indices.sites)
-
-# Functional richness ####
-# Validation of assumptions
-# Normality
-shapiro.test(funct_diversity$fric[funct_diversity$Zone == 'Shallow'])
-shapiro.test(funct_diversity$fric[funct_diversity$Zone == 'Mesophotic'])
-
-# Homoscedasticity
-var(funct_diversity$fric[funct_diversity$Zone == 'Shallow'])/
-  var(funct_diversity$fric[funct_diversity$Zone == 'Mesophotic'])
-
-var.test(funct_diversity$fric[funct_diversity$Zone == 'Shallow'],
-         funct_diversity$fric[funct_diversity$Zone == 'Mesophotic'],
-         ratio = 1, alternative = 'g') # p< 0.001
-
-# Statistical test
-wilcox.test(funct_diversity$fric[funct_diversity$Zone == 'Shallow'],
-            funct_diversity$fric[funct_diversity$Zone == 'Mesophotic'],
-            paired = F, alternative = 'g', correct = T) # p< 0.001
-
-
-# Functional originality ####
-# Validation of assumptions
-# Normality
-shapiro.test(funct_diversity$fori[funct_diversity$Zone == 'Shallow'])
-shapiro.test(funct_diversity$fori[funct_diversity$Zone == 'Mesophotic'])
-
-# Homoscedasticity
-var(funct_diversity$fori[funct_diversity$Zone == 'Shallow'])/
-  var(funct_diversity$fori[funct_diversity$Zone == 'Mesophotic'])
-
-var.test(funct_diversity$fori[funct_diversity$Zone == 'Shallow'],
-         funct_diversity$fori[funct_diversity$Zone == 'Mesophotic'],
-         ratio = 1, alternative = 'l') # p> 0.05
-
-# Statistical test
-t.test(funct_diversity$fori[funct_diversity$Zone == 'Shallow'],
-       funct_diversity$fori[funct_diversity$Zone == 'Mesophotic'],
-       paired = F, alternative = 'g', correct = T)
-
-
-# Functional divergence ####
-# Validation of assumptions
-# Normality
-shapiro.test(funct_diversity$fdiv[funct_diversity$Zone == 'Shallow'])
-shapiro.test(funct_diversity$fdiv[funct_diversity$Zone == 'Mesophotic'])
-
-# Homoscedasticity
-var(funct_diversity$fdiv[funct_diversity$Zone == 'Shallow'])/
-  var(funct_diversity$fdiv[funct_diversity$Zone == 'Mesophotic'])
-
-var.test(funct_diversity$fdiv[funct_diversity$Zone == 'Shallow'],
-         funct_diversity$fdiv[funct_diversity$Zone == 'Mesophotic'],
-         ratio = 1, alternative = 'l') # p< 0.001
-
-# Statistical test
-wilcox.test(funct_diversity$fdiv[funct_diversity$Zone == 'Shallow'],
-            funct_diversity$fdiv[funct_diversity$Zone == 'Mesophotic'],
-            paired = F, alternative = 'g', correct = T) # p> 0.05
-
-# Data visualization ####
-# Functional richness graph
-fric<- ggplot(funct_diversity,
-              aes(x = Site, y = fric, colour = Zone))+
-  geom_boxplot(show.legend = F, size = 1.5)+
-  geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
-             show.legend = F)+
-  scale_colour_manual(values = c('darkred', 'royalblue4'))+
-  ylim(0, 0.40)+ labs(y = 'FRic')+
-  annotate('text', x = 1, y = 0.4, label = 'A)*',
-           size = 15)+
-  theme_classic(base_size = 25)+
-  theme(legend.text = element_text(size = 28),
-        legend.title = element_text(size = 30))
-
-# Functional originality graph
-fori<- ggplot(funct_diversity,
-              aes(x = Site, y = fori, colour = Zone))+
-  geom_boxplot(show.legend = F, size = 1.5)+
-  geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
-             show.legend = F)+
-  scale_colour_manual(values = c('darkred', 'royalblue4'))+
-  ylim(0, 0.40)+ labs(y = 'FOri')+
-  stat_summary(fun = mean, geom = "point", col = "black",
-               size = 9, fill = 'black', shape = 23,
-               aes(group = Zone))+
-  annotate('text', x = 1, y = 0.4, label = 'B)*',
-           size = 15)+
-  theme_classic(base_size = 25)+
-  theme(legend.text = element_text(size = 28),
-        legend.title = element_text(size = 30))
-
-# Functional divergence graph
-fdiv<- ggplot(funct_diversity,
-              aes(x = Site, y = fdiv, colour = Zone))+
-  geom_boxplot(show.legend = F, size = 1.5)+
-  geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
-             show.legend = F)+
-  scale_colour_manual(values = c('darkred', 'royalblue4'))+
-  ylim(0.60, 1)+ labs(y = 'FDiv')+
-  annotate('text', x = 1, y = 1, label = 'C)',
-           size = 15)+
-  theme_classic(base_size = 25)+
-  theme(legend.text = element_text(size = 28),
-        legend.title = element_text(size = 30))
-
-multi <- grid.arrange(fric, fori, fdiv,
-             ncol = 3, nrow = 1)
-
-ggsave('Figs/Figure 3.tiff', plot = multi, width = 6560, height = 3440,
-       units = 'px', dpi = 320, compression = "lzw")
-#ggsave(here:: here('Figs/Figure 3.tiff'), plot = multi, width = 6560,
-#       height = 3440, units = 'px', dpi = 320, compression = "lzw")
-
+funct.diversity<- indices$functional_diversity_indices
 
 # Remove objects
-rm(FE, nbFE, perf_PNZMAES, inflection_points, var.expl,
-   Year, Zone, Season, Site, funct_diversity,
-   indices.zones, indices.sites, fric, fori, fdiv)
+rm(FE, nbFE, perf_PNZMAES, inflection_points, var.expl, indices)
 
 
 # Convex hull ####
@@ -645,7 +480,7 @@ ggsave('Figs/Appendix S3.tiff', width = 4280, height = 3536,
 # Remove objects
 rm(coord, spp_fes, transects, zone, FSpace, cols, labels_fig_cv,
    m, midpoints, ch, ch_all, tr, tr_all, a, extant, fes_cond, i,
-   fd.coord)
+   fd.coord, fdiv.plot)
 
 # Hill numbers ####
 
@@ -659,11 +494,6 @@ rm(coord, spp_fes, transects, zone, FSpace, cols, labels_fig_cv,
 dist.taxo <- sub.gower
 dist.taxo[dist.taxo == 0]<- 0.0001
 
-# Species richness
-hill.tax.q0<- alpha.fd.hill(asb_sp_w = as.matrix(sub.abundance),
-                            sp_dist = dist.taxo,
-                            q = 0,
-                            tau = 'min')$asb_FD_Hill
 
 # Entropy (Shannon index)
 hill.tax.q1<- alpha.fd.hill(asb_sp_w = as.matrix(sub.abundance),
@@ -685,127 +515,130 @@ hill.fd.q1<- alpha.fd.hill(asb_sp_w = as.matrix(sub.abundance),
               q = 1,
               tau = 'mean')$asb_FD_Hill
 
-# Merge
-hill.div <- data.frame(tax.rich = hill.tax.q0[, 1],
-                       tax.entro = hill.tax.q1[, 1],
-                       fd.rich = hill.fd.q0[, 1],
-                       fd.entro = hill.fd.q1[, 1])
-hill.div
+# Merging data
+distance.div <- data.frame(funct.diversity[2:4], hill.tax.q1,
+                       hill.fd.q0, hill.fd.q1) %>%
+  rownames_to_column(., 'Video.transect') %>%
+  rename(FRic = fric, FOri = fori, FDiv = fdiv,
+         Tax.Entro = FD_q1, FD.Rich = FD_q0, FD.Entro = FD_q1.1)
+
+diversity.metrics <- diversity.metrics %>%
+  left_join(distance.div, by = 'Video.transect')
+
+# Particularly for these data, we keep NAs because the value is not 0.
+
+# Summary functional diversity per zone
+func.indices.zones<- diversity.metrics %>%
+  group_by(Zone) %>% na.omit() %>% 
+  summarise(MeanFRic = round(mean(FRic), 2),
+            SD.FRic = round(sd(FRic), 2),
+            MeanFOri = round(mean(FOri), 2),
+            SD.FOri = round(sd(FOri), 2),
+            MeanFDiv = round(mean(FDiv), 2),
+            SD.FDiv = round(sd(FDiv), 2))
+as_tibble(func.indices.zones)
+
+# Summary functional diversity per zone and site
+func.indices.site <- diversity.metrics %>%
+  group_by(Zone, Site) %>% na.omit() %>% 
+  summarise(MeanFRic = round(mean(FRic), 2),
+            SD.FRic = round(sd(FRic), 2),
+            MeanFOri = round(mean(FOri), 2),
+            SD.FOri = round(sd(FOri), 2),
+            MeanFDiv = round(mean(FDiv), 2),
+            SD.FDiv = round(sd(FDiv), 2))
+as_tibble(func.indices.site)
+
+# Summary Hill numbers per zone
+hill.indices.zones<- diversity.metrics %>%
+  group_by(Zone) %>% na.omit() %>% 
+  summarise(Taxq0 = round(mean(Richness), 2),
+            Taxq0.SD = round(sd(Richness), 2),
+            Taxq1 = round(mean(Tax.Entro), 2),
+            Taxq1.SD = round(sd(Tax.Entro), 2),
+            Functq0 = round(mean(FD.Rich), 2),
+            Functq0.SD = round(sd(FD.Rich), 2),
+            Functq1 = round(mean(FD.Entro), 2),
+            Functq1.SD = round(sd(FD.Entro), 2))
+as_tibble(hill.indices.zones)
+
+# Summary Hill numbers per site
+hill.indices.sites<- diversity.metrics %>%
+  group_by(Zone, Site) %>% na.omit() %>% 
+  summarise(Taxq0 = round(mean(Richness), 2),
+            Taxq0.SD = round(sd(Richness), 2),
+            Taxq1 = round(mean(Tax.Entro), 2),
+            Taxq1.SD = round(sd(Tax.Entro), 2),
+            Functq0 = round(mean(FD.Rich), 2),
+            Functq0.SD = round(sd(FD.Rich), 2),
+            Functq1 = round(mean(FD.Entro), 2),
+            Functq1.SD = round(sd(FD.Entro), 2))
+as_tibble(hill.indices.sites)
+
+# Remove objects
+rm(origin, abundance, data.between, presence.conditions, qual,
+   sub.abundance, sub.traits, traits, types, funct.diversity, dist.taxo,
+   sub.gower, hill.tax.q1, hill.fd.q0, hill.fd.q1, distance.div,
+   func.indices.zones, func.indices.site, hill.indices.zones,
+   hill.indices.sites)
+
+# Generalized Linear Mixed Models ####
 
 
-# Statystical analysis ####
-Zone<- data.between[data.between$Video.transect %in%
-                      rownames(hill.div), 110]
-Site<- data.between[data.between$Video.transect %in%
-                      rownames(hill.div), 1]
 
-# Create an object including the indices and factors 
-hill.div<- cbind(Zone, Site, hill.div)
+# Data visualization ####
+# Functional richness graph
+fric<- ggplot(diversity.metrics,
+              aes(x = Site, y = FRic, colour = Zone))+
+  geom_boxplot(show.legend = F, size = 1.5)+
+  geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
+             show.legend = F)+
+  scale_colour_manual(values = c('darkred', 'royalblue4'))+
+  ylim(0, 0.40)+ labs(y = 'FRic')+
+  annotate('text', x = 1, y = 0.4, label = 'A)*',
+           size = 15)+
+  theme_classic(base_size = 25)+
+  theme(legend.text = element_text(size = 28),
+        legend.title = element_text(size = 30))
 
-glimpse(hill.div)
+# Functional originality graph
+fori<- ggplot(diversity.metrics,
+              aes(x = Site, y = FOri, colour = Zone))+
+  geom_boxplot(show.legend = F, size = 1.5)+
+  geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
+             show.legend = F)+
+  scale_colour_manual(values = c('darkred', 'royalblue4'))+
+  ylim(0, 0.40)+ labs(y = 'FOri')+
+  stat_summary(fun = mean, geom = "point", col = "black",
+               size = 9, fill = 'black', shape = 23,
+               aes(group = Zone))+
+  annotate('text', x = 1, y = 0.4, label = 'B)*',
+           size = 15)+
+  theme_classic(base_size = 25)+
+  theme(legend.text = element_text(size = 28),
+        legend.title = element_text(size = 30))
 
-# Summary per zone
-hill.zones<- hill.div %>%
-  group_by(Zone) %>%
-  summarise(Taxon_richness = round(mean(tax.rich), 2),
-            TaxRich_SD = round(sd(tax.rich), 2),
-            Taxon_entropy = round(mean(tax.entro), 2),
-            TaxEntro_SD = round(sd(tax.entro), 2),
-            Funct_richness = round(mean(fd.rich), 2),
-            FuncRich_SD = round(sd(fd.rich), 2),
-            Funct_entropy = round(mean(fd.entro), 2),
-            FuncEntro_SD = round(sd(fd.entro), 2))
+# Functional divergence graph
+fdiv<- ggplot(diversity.metrics,
+              aes(x = Site, y = FDiv, colour = Zone))+
+  geom_boxplot(show.legend = F, size = 1.5)+
+  geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
+             show.legend = F)+
+  scale_colour_manual(values = c('darkred', 'royalblue4'))+
+  ylim(0.60, 1)+ labs(y = 'FDiv')+
+  annotate('text', x = 1, y = 1, label = 'C)',
+           size = 15)+
+  theme_classic(base_size = 25)+
+  theme(legend.text = element_text(size = 28),
+        legend.title = element_text(size = 30))
 
-# Summary per site
-hill.sites<- hill.div %>%
-  group_by(Zone, Site) %>%
-  summarise(Taxon_richness = round(mean(tax.rich), 2),
-            TaxRich_SD = round(sd(tax.rich), 2),
-            Taxon_entropy = round(mean(tax.entro), 2),
-            TaxEntro_SD = round(sd(tax.entro), 2),
-            Funct_richness = round(mean(fd.rich), 2),
-            FuncRich_SD = round(sd(fd.rich), 2),
-            Funct_entropy = round(mean(fd.entro), 2),
-            FuncEntro_SD = round(sd(fd.entro), 2))
+multi <- grid.arrange(fric, fori, fdiv, ncol = 3, nrow = 1)
 
-# Taxonomic diversity ####
+ggsave('Figs/Figure 3.tiff', plot = multi, width = 6560, height = 3440,
+       units = 'px', dpi = 320, compression = "lzw")
+#ggsave(here:: here('Figs/Figure 3.tiff'), plot = multi, width = 6560,
+#       height = 3440, units = 'px', dpi = 320, compression = "lzw")
 
-# Richness
-# Validation of assumptions
-# Normality
-shapiro.test(hill.div$tax.rich[hill.div$Zone == 'Shallow'])
-shapiro.test(hill.div$tax.rich[hill.div$Zone == 'Mesophotic'])
-
-# Homoscedasticity
-var(hill.div$tax.rich[hill.div$Zone == 'Shallow'])/
-  var(hill.div$tax.rich[hill.div$Zone == 'Mesophotic'])
-
-var.test(hill.div$tax.rich[hill.div$Zone == 'Shallow'],
-         hill.div$tax.rich[hill.div$Zone == 'Mesophotic'],
-         ratio = 1, alternative = 'g') # p< 0.001
-
-# Statistical test
-wilcox.test(hill.div$tax.rich[hill.div$Zone == 'Shallow'],
-            hill.div$tax.rich[hill.div$Zone == 'Mesophotic'],
-            paired = F, alternative = 'g', correct = T) # p< 0.001
-
-# Entropy
-# Validation of assumptions
-# Normality
-shapiro.test(hill.div$tax.entro[hill.div$Zone == 'Shallow'])
-shapiro.test(hill.div$tax.entro[hill.div$Zone == 'Mesophotic'])
-
-# Homoscedasticity
-var(hill.div$tax.entro[hill.div$Zone == 'Shallow'])/
-  var(hill.div$tax.entro[hill.div$Zone == 'Mesophotic'])
-
-var.test(hill.div$tax.entro[hill.div$Zone == 'Shallow'],
-         hill.div$tax.entro[hill.div$Zone == 'Mesophotic'],
-         ratio = 1, alternative = 'g') # p< 0.005
-
-# Statistical test
-wilcox.test(hill.div$tax.entro[hill.div$Zone == 'Shallow'],
-            hill.div$tax.entro[hill.div$Zone == 'Mesophotic'],
-            paired = F, alternative = 'g', correct = T) # p< 0.001
-
-# Functional diversity ####
-# Richness
-# Validation of assumptions
-# Normality
-shapiro.test(hill.div$fd.rich[hill.div$Zone == 'Shallow'])
-shapiro.test(hill.div$fd.rich[hill.div$Zone == 'Mesophotic'])
-
-# Homoscedasticity
-var(hill.div$fd.rich[hill.div$Zone == 'Shallow'])/
-  var(hill.div$fd.rich[hill.div$Zone == 'Mesophotic'])
-
-var.test(hill.div$fd.rich[hill.div$Zone == 'Shallow'],
-         hill.div$fd.rich[hill.div$Zone == 'Mesophotic'],
-         ratio = 1, alternative = 'l') # p> 0.05
-
-# Statistical test
-t.test(hill.div$fd.rich[hill.div$Zone == 'Shallow'],
-       hill.div$fd.rich[hill.div$Zone == 'Mesophotic'],
-       paired = F, alternative = 'g', correct = T) # p> 0.05
-
-# Entropy
-# Validation of assumptions
-# Normality
-shapiro.test(hill.div$fd.entro[hill.div$Zone == 'Shallow'])
-shapiro.test(hill.div$fd.entro[hill.div$Zone == 'Mesophotic'])
-
-# Homoscedasticity
-var(hill.div$fd.entro[hill.div$Zone == 'Shallow'])/
-  var(hill.div$fd.entro[hill.div$Zone == 'Mesophotic'])
-
-var.test(hill.div$fd.entro[hill.div$Zone == 'Shallow'],
-         hill.div$fd.entro[hill.div$Zone == 'Mesophotic'],
-         ratio = 1, alternative = 'g') # p> 0.05
-
-# Statistical test
-t.test(hill.div$fd.entro[hill.div$Zone == 'Shallow'],
-       hill.div$fd.entro[hill.div$Zone == 'Mesophotic'],
-       paired = F, alternative = 'g', correct = T) # p> 0.05
 
 # Data visualization ####
 # Taxonomic diversity graph
@@ -888,7 +721,6 @@ ggsave('Figs/Figure 4.tiff', plot = hill, width = 5500, height = 4700,
 #       height = 4700, compression = "lzw", units = 'px', dpi = 320)
 
 # Remove objects
-rm(entro, fd.entro, fd.rich, fdiv.plot, hill.div, hill.fd.q0,
+rm(funct.diversity, entro, fd.entro, fd.rich, fdiv.plot, hill.div, hill.fd.q0,
    hill.fd.q1, hill.sites, hill.tax.q0, hill.tax.q1, hill.zones,
    dist.taxo, Site, sub.gower, Zone)
-
