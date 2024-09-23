@@ -93,7 +93,7 @@ diversity.metrics <- diversity.metrics %>%
 diversity.metrics[is.na(diversity.metrics)]<- 0
 
 # Remove objects
-rm(mv.data, species.mod, long.abund)
+rm(mv.data, species.mod, long.abund, results.mod, summary.mod)
 
 
 # Taxonomic distinctness ####
@@ -153,7 +153,7 @@ delta.shallow<- tax.shallow$Dstar %>% as.data.frame()
 # Mesophotic reefs
 tax.meso <- taxondive(data.meso, taxdis.meso)
 delta.meso <- tax.meso$Dstar %>% as.data.frame()
-delta.meso[is.na(delta.meso)] <- 0
+delta.meso[is.na(delta.meso)] <- 0.0001 # To avoid "non-positive" values in glmm
 
 # Merging data
 delta.data <- rbind(delta.shallow, delta.meso) %>%
@@ -582,8 +582,72 @@ rm(origin, abundance, data.between, presence.conditions, qual,
    func.indices.zones, func.indices.site, hill.indices.zones,
    hill.indices.sites)
 
-# Generalized Linear Mixed Models ####
 
+# Generalized Linear Mixed Models ####
+# Richness/Taxonomic richness (q= 0)
+glmm.rich.mod <- diversity.metrics %>% 
+  glmer(Richness ~ Zone + (1|Year) + (1|Season) + (1|Site),
+        family = 'poisson', data = .)
+
+summary(glmm.rich.mod) # Significant effect
+resid_panel(glmm.rich.mod)
+
+# Taxonomic Distinctness
+glmm.distinc.mod <- diversity.metrics %>% 
+  glmer(Distinctness ~ Zone + (1|Year) + (1|Season) + (1|Site),
+        family = 'Gamma', data = .)
+
+summary(glmm.distinc.mod) # Non statistical effect
+resid_panel(glmm.distinc.mod)
+
+# Functional richness (FRic)
+glmm.fric.mod <- diversity.metrics %>% na.omit() %>% 
+  glmer(FRic ~ Zone + (1|Year) + (1|Season) + (1|Site),
+        family = 'Gamma', data = .)
+
+summary(glmm.fric.mod) # Significant effect
+resid_panel(glmm.fric.mod)
+
+# Functional originality (FOri)
+glmm.fori.mod <- diversity.metrics %>% na.omit() %>% 
+  glmer(FOri ~ Zone + (1|Year) + (1|Season) + (1|Site),
+        family = 'Gamma', data = .)
+
+summary(glmm.fori.mod) # Non statistical effect
+resid_panel(glmm.fori.mod)
+
+# Functional divergence (FDiv)
+glmm.fdiv.mod <- diversity.metrics %>% na.omit() %>% 
+  glmer(FDiv ~ Zone + (1|Year) + (1|Season) + (1|Site),
+        family = 'Gamma', data = .)
+
+summary(glmm.fdiv.mod) # Non statistical effect
+resid_panel(glmm.fdiv.mod)
+
+# Taxonomic entropy (q= 1)
+glmm.taxq1.mod <- diversity.metrics %>% na.omit() %>% 
+  glmer(Tax.Entro ~ Zone + (1|Year) + (1|Season) + (1|Site),
+        family = 'Gamma', data = .)
+
+summary(glmm.taxq1.mod) # Significant effect
+resid_panel(glmm.taxq1.mod)
+
+# Functional richness (q= 0)
+glmm.funcq0.mod <- diversity.metrics %>% na.omit() %>% 
+  glmer(FD.Rich ~ Zone + (1|Year) + (1|Season) + (1|Site),
+        family = 'Gamma', data = .)
+
+summary(glmm.funcq0.mod) # Non statistical effect
+resid_panel(glmm.funcq0.mod)
+
+# Functional entropy (q= 1)
+glmm.funcq1.mod <- diversity.metrics %>% na.omit() %>% 
+  glmer(FD.Entro ~ Zone + (1|Year) + (1|Season) + (1|Site),
+        family = 'Gamma', data = .,
+        control = glmerControl(optimizer = 'bobyqa'))
+
+summary(glmm.funcq1.mod) # Non statistical effect
+resid_panel(glmm.funcq1.mod)
 
 
 # Data visualization ####
