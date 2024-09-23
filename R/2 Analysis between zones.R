@@ -676,7 +676,7 @@ fori<- ggplot(diversity.metrics,
   stat_summary(fun = mean, geom = "point", col = "black",
                size = 9, fill = 'black', shape = 23,
                aes(group = Zone))+
-  annotate('text', x = 1, y = 0.4, label = 'B)*',
+  annotate('text', x = 1, y = 0.4, label = 'B)',
            size = 15)+
   theme_classic(base_size = 25)+
   theme(legend.text = element_text(size = 28),
@@ -704,10 +704,9 @@ ggsave('Figs/Figure 3.tiff', plot = multi, width = 6560, height = 3440,
 #       height = 3440, units = 'px', dpi = 320, compression = "lzw")
 
 
-# Data visualization ####
 # Taxonomic diversity graph
-rich<- ggplot(hill.div,
-              aes(x = Site, y = tax.rich, colour = Zone))+
+rich<- ggplot(diversity.metrics,
+              aes(x = Site, y = Richness, colour = Zone))+
   geom_boxplot(show.legend = F, size = 1.5)+
   geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
              show.legend = F)+
@@ -724,8 +723,8 @@ rich<- ggplot(hill.div,
         axis.text.x = element_blank())
 
 # Taxonomic entropy graph
-entro<- ggplot(hill.div,
-              aes(x = Site, y = tax.entro, colour = Zone))+
+entro<- ggplot(diversity.metrics,
+              aes(x = Site, y = Tax.Entro, colour = Zone))+
   geom_boxplot(show.legend = F, size = 1.5)+
   geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
              show.legend = F)+
@@ -739,8 +738,8 @@ entro<- ggplot(hill.div,
         legend.title = element_text(size = 30))
 
 # Functional diversity
-fd.rich<- ggplot(hill.div,
-                 aes(x = Site, y = fd.rich, colour = Zone))+
+fd.rich<- ggplot(diversity.metrics,
+                 aes(x = Site, y = FD.Rich, colour = Zone))+
   geom_boxplot(show.legend = F, size = 1.5)+
   geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
              show.legend = F)+
@@ -759,8 +758,8 @@ fd.rich<- ggplot(hill.div,
         axis.title.x = element_blank(),
         axis.text.x = element_blank())
 
-fd.entro<- ggplot(hill.div,
-                 aes(x = Site, y = fd.entro, colour = Zone))+
+fd.entro<- ggplot(diversity.metrics,
+                 aes(x = Site, y = FD.Entro, colour = Zone))+
   geom_boxplot(show.legend = F, size = 1.5)+
   geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
              show.legend = F)+
@@ -777,7 +776,7 @@ fd.entro<- ggplot(hill.div,
         axis.title.y = element_blank())
 
 hill <- grid.arrange(rich, fd.rich, entro, fd.entro,
-             ncol = 2, nrow = 2)
+                     ncol = 2, nrow = 2)
 
 ggsave('Figs/Figure 4.tiff', plot = hill, width = 5500, height = 4700,
        compression = "lzw", units = 'px', dpi = 320)
