@@ -26,10 +26,6 @@ as_tibble(origin)
 origin$Year<- as.factor(origin$Year)
 as_tibble(origin)
 
-# Data between zones ####
-data.between<- origin %>%
-  filter(as.numeric(Year) >= '2021') %>% droplevels()
-
 
 # Set depth zones based on the light processing file ####
 data.between<- mutate(data.between,
@@ -38,7 +34,7 @@ data.between<- mutate(data.between,
               as.numeric(as.character(Initial_depth)) >= 21 &
               Final_depth == '>30' |
               Initial_depth == '>30' & Final_depth == '>30',
-              'Mesophotic', 'Shallow'))
+              'Mesophotic', 'Shallow')) %>% droplevels()
 
 # Convert NAs to "shallow" zone
 data.between$Zone[is.na(data.between$Zone)]<- 'Shallow'
