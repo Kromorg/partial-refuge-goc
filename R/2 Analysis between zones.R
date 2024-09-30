@@ -11,7 +11,8 @@ pacman:: p_load(tidyverse, # Data wrangling
                 ggResidpanel) # Model assumption graphs
 
 rm(list = ls())
-shell('cls')
+shell('cls') # For Windows users
+system2('clear') # For Mac users
 
 
 # Open database ####
@@ -28,7 +29,7 @@ as_tibble(origin)
 
 
 # Set depth zones based on the light processing file ####
-data.between<- mutate(data.between,
+data.between<- mutate(origin,
     Zone = ifelse(as.numeric(as.character(Initial_depth)) >= 21 &
               as.numeric(as.character(Final_depth)) >= 21 |
               as.numeric(as.character(Initial_depth)) >= 21 &
@@ -61,12 +62,12 @@ mv.data$Fish <- abundance %>%  as.matrix()
 
 # Multivariate model
 species.mod <- manyglm(Fish ~ Zone*Year*Season*Site,
-                       data = mv.data, family = 'poisson')
+                       data = mv.data, family = 'negative.binomial')
 
 # Model visual assumptions
 plot(species.mod)
 
-# Model results
+# Model results (be PATIENT, takes time)
 results.mod <- anova.manyglm(species.mod, p.uni = 'adjusted')
 results.mod
 summary.mod <- summary.manyglm(species.mod)

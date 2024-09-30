@@ -5,7 +5,8 @@ pacman:: p_load(tidyverse, # Data wrangling
                 gridExtra) # Multiple plots
 
 rm(list = ls())
-shell('cls')
+shell('cls') # For Windows users
+system2('clear') # For Mac users
 
 # Either create a new project to set your working directory more easily
 # or use 'here' package.
