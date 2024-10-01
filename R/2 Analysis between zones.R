@@ -67,12 +67,17 @@ species.mod <- manyglm(Fish ~ Zone*Year*Season*Site,
 # Model visual assumptions
 plot(species.mod)
 
-# Model results (be PATIENT, takes time)
+# Model results
+# Results and summary having been saved as a .RDS file because
+# of computation time consuming. If you decide to rerun these 
+# line codes, be patient.
 results.mod <- anova.manyglm(species.mod, p.uni = 'adjusted')
 results.mod
+saveRDS(results.mod, file = 'Data/Multivariate_results.RDS')
+
 summary.mod <- summary.manyglm(species.mod)
 summary.mod
-
+saveRDS(summary.mod, file = 'Data/Multivariate_summary.RDS')
 
 # Create base object to save diversity indices ####
 diversity.metrics <- data.between %>% 
