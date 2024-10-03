@@ -104,7 +104,7 @@ gg <- merge(MDS.coord,
                       MDS.coord, mean), by = "Zone")
 
 # Zone Plot 
-ggplot(gg, aes(MDS1, MDS2, color = Zone))+
+zone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
   scale_colour_manual(values = c("#27408B", "#8B0000"))+
   geom_point(size = 2)+
   geom_segment(aes(x = mean.x, y = mean.y, xend = MDS1, yend = MDS2))+
@@ -120,7 +120,7 @@ ggplot(gg, aes(MDS1, MDS2, color = Zone))+
 forms <- c("Mesophotic" = 16, "Shallow" = 17)
 
 # Sites plot
-ggplot(gg, aes(MDS1, MDS2, color = Site, shape = Zone)) +
+Sites_plot <- ggplot(gg, aes(MDS1, MDS2, color = Site, shape = Zone)) +
   scale_colour_manual(values = c("#27408B", "#8B0000", "#989823")) +
   geom_point(size = 4) +
   scale_shape_manual(values = forms) +
@@ -132,8 +132,8 @@ ggplot(gg, aes(MDS1, MDS2, color = Site, shape = Zone)) +
   theme_bw(base_size = 25) +
   theme(panel.grid = element_blank())
 
-# Simple Zone Plot 
-ggplot(gg, aes(MDS1, MDS2, color = Zone))+
+# Basic Zone Plot 
+bzone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
   scale_colour_manual(values = c("#27408B", "#8B0000"))+
   geom_point(size = 3)+
   labs(x = "nMDS1", y = "nMDS2")+
