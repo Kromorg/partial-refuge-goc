@@ -149,5 +149,5 @@ nmds_plots <- grid.arrange(zone_plot, Sites_plot, ncol = 1, nrow = 2)
 
 ggsave('Figs/Figure 1.tiff', plot = nmds_plots, width = 5350,
        height = 4000, units = 'px', dpi = 320, compression = "lzw")
-#ggsave(here:: here('Figs/Figure 1.tiff'), plot = multi, width = 6560,
-#       height = 3440, units = 'px', dpi = 320, compression = "lzw")
+#ggsave(here:: here('Figs/Figure 1.tiff'), plot = multi, width = 5350,
+#       height = 4000, units = 'px', dpi = 320, compression = "lzw")
