@@ -1,7 +1,5 @@
 # Open libraries y clean console ####
 pacman:: p_load(tidyverse, # Data wrangling
-                ggplot2, # Graphs
-                gridExtra, # Multiple plots
                 mvabund, lme4, # Multivariate analysis and GLMMs
                 labdsv, # Convert wide to long format
                 vegan, # Taxonomic distinctness

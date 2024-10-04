@@ -1,5 +1,6 @@
 # Open libraries y clean console ####
-library(tidyverse)
+pacman::p_load(tidyverse,  # Data wrangling
+               gridExtra) # Multiple plots
 
 rm(list = ls())
 shell('cls') # For Windows users
