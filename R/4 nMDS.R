@@ -1,15 +1,17 @@
 # Open libraries y clean console ####
 pacman::p_load(tidyverse, # Data wrangling
                vegan, # nMDS (distance calculation)
-               ggplot2) # Graphs
+               gridExtra) # Multiple plots
 
 rm(list = ls())
-# system2("clear")
-# shell('cls')
+system2("clear") # For Windows users
+shell('cls') # For Mac users
 
 # Open database ####
 origin<- read.csv('Data/Abundance data.csv',
                   header = T, stringsAsFactors = T)
+#origin <- read.csv(here:: here('Data/Diversity_indices.csv'),
+#                   header = T, stringsAsFactors = T)
 
 # Set variable "Year" to factor
 origin$Year<- as.factor(origin$Year)
@@ -76,7 +78,7 @@ factors_filtered <- factors[-rows_to_delete, ]
 
 # Join data ####
 full_data <- cbind(factors_filtered, abundance_filtered)
-write_csv(full_data, "Data/abundance_nMDS_data.csv")
+write_csv(full_data, "Data/nMDS_data.csv")
 
 # Fourth root transformation ####
 transf<- abundance_filtered^0.25
@@ -110,7 +112,7 @@ zone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
   geom_segment(aes(x = mean.x, y = mean.y, xend = MDS1, yend = MDS2))+
   geom_point(aes(x = mean.x, y = mean.y), size = 2.5, color = "black")+
   stat_ellipse(level = 0.95)+
-  labs(x = "nMDS1", y = "nMDS2")+
+  labs(x = NULL, y = "nMDS2")+
   annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
            size = 15) +
   xlim(-2.5, 7.5) + ylim(-1.1, 1.1) +
@@ -142,3 +144,10 @@ bzone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
   xlim(-2.5, 7.5) + ylim(-1.1, 1.1) +
   theme_bw(base_size = 25) +
   theme(panel.grid = element_blank())
+
+nmds_plots <- grid.arrange(zone_plot, Sites_plot, ncol = 1, nrow = 2)
+
+ggsave('Figs/Figure 1.tiff', plot = nmds_plots, width = 5350,
+       height = 4000, units = 'px', dpi = 320, compression = "lzw")
+#ggsave(here:: here('Figs/Figure 1.tiff'), plot = multi, width = 6560,
+#       height = 3440, units = 'px', dpi = 320, compression = "lzw")
