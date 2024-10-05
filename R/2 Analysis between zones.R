@@ -308,6 +308,7 @@ rm(FE, nbFE, perf_PNZMAES, inflection_points, var.expl, indices)
 # Convex hull ####
 # Species coordinates
 fd.coord<- coord[, c('PC1', 'PC2', 'PC3', 'PC4')]
+
 # Load Species and FE data
 spp_fes<- data.frame(FE = str_c(sub.traits$Size, '',
                                 sub.traits$Mobility, '',
@@ -380,7 +381,7 @@ names(cols) <- zone
 
 labels_fig_cv <- c("No. spp.", "No. FE", "Vol.")
 
-tiff(filename = "Figs/Figure 2.tiff", height = 7500, width = 5700,
+tiff(filename = "Figs/Figure 3.tiff", height = 7500, width = 5700,
      compression = "lzw", antialias = 'cleartype', res = 320,
      pointsize = 36)
 #tiff(filename = here:: here("Figs/Figure 2.tiff"), height = 7500,

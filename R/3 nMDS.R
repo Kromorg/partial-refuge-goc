@@ -4,8 +4,8 @@ pacman::p_load(tidyverse, # Data wrangling
                gridExtra) # Multiple plots
 
 rm(list = ls())
-system2("clear") # For Windows users
-shell('cls') # For Mac users
+shell('cls') # For Windows users
+system2('clear') # For Mac users
 
 # Open database ####
 origin<- read.csv('Data/Abundance data.csv',
@@ -147,7 +147,7 @@ bzone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
 
 nmds_plots <- grid.arrange(zone_plot, Sites_plot, ncol = 1, nrow = 2)
 
-ggsave('Figs/Figure 1.tiff', plot = nmds_plots, width = 5350,
+ggsave('Figs/Figure 2.tiff', plot = nmds_plots, width = 5350,
        height = 4000, units = 'px', dpi = 320, compression = "lzw")
 #ggsave(here:: here('Figs/Figure 1.tiff'), plot = multi, width = 5350,
 #       height = 4000, units = 'px', dpi = 320, compression = "lzw")

@@ -59,7 +59,7 @@ fdiv<- ggplot(diversity.metrics,
 
 multi <- grid.arrange(fric, fori, fdiv, ncol = 3, nrow = 1)
 
-ggsave('Figs/Figure 3.tiff', plot = multi, width = 6560, height = 3440,
+ggsave('Figs/Figure 4.tiff', plot = multi, width = 6560, height = 3440,
        units = 'px', dpi = 320, compression = "lzw")
 #ggsave(here:: here('Figs/Figure 3.tiff'), plot = multi, width = 6560,
 #       height = 3440, units = 'px', dpi = 320, compression = "lzw")
@@ -139,7 +139,7 @@ fd.entro<- ggplot(diversity.metrics,
 hill <- grid.arrange(rich, fd.rich, entro, fd.entro,
                      ncol = 2, nrow = 2)
 
-ggsave('Figs/Figure 4.tiff', plot = hill, width = 5500, height = 4700,
+ggsave('Figs/Figure 5.tiff', plot = hill, width = 5500, height = 4700,
        compression = "lzw", units = 'px', dpi = 320)
 #ggsave(here:: here('Figs/Figure 4.tiff'), plot = hill, width = 5500,
 #       height = 4700, compression = "lzw", units = 'px', dpi = 320)
