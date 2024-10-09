@@ -146,8 +146,7 @@ diversity.metrics <- diversity.metrics %>%
   left_join(delta.data, by = 'Video.transect')
 
 # Remove objects
-rm(taxonomy, data.shallow, taxdis.shallow, data.meso, taxdis.meso,
-   delta.shallow, delta.meso, delta.data, tax.shallow, tax.meso)
+rm(taxonomy, data.delta, delta, delta.data, tax.delta, taxdis.delta)
 
 
 # Functional diversity analysis ####
@@ -211,9 +210,8 @@ sum(sub.abundance$nbFE < 6) # Number of video-transects S< 6
 
 sub.abundance<- sub.abundance[, -104] # Delete row "nbFE"
 
-which(colSums(sub.abundance) == 0) # Which species are absent due to deleting
-sub.abundance<- sub.abundance[,-c(5, 17, 41, 48, 50, 57, 67, 83,
-                            85, 89)] # Delete those species
+absent <- which(colSums(sub.abundance) == 0) # Which species are absent due to deleting
+sub.abundance<- sub.abundance[,-c(absent)] # Delete those species
 which(colSums(sub.abundance) == 0) # No longer absent species
 
 
