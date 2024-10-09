@@ -49,7 +49,8 @@ data.between$Zone<- factor(data.between$Zone,
 # Creating objects to run the functions ####
 
 # Subset abundance data
-abundance <- data.between[, c(7:109)]
+abundance <- data.between %>%
+  select(Abudefduf_troschelii:Zapteryx_exasperata)
 rownames(abundance) <- data.between[, 6]
 
 # Testing if environmental variables have an effect on the abundance
@@ -111,39 +112,20 @@ taxonomy <- read.csv('Data/Classification.csv', header = TRUE,
 #taxonomy <- read.csv(here:: here('Data/Classification.csv'),
 #header = TRUE, row.names = 1)
 
-# Select data from shallow and mesophotic reefs
-# Shallow reefs
-data.shallow <- data.between %>% filter(Zone == 'Shallow')%>% 
-  select(Abudefduf_troschelii:Zapteryx_exasperata) %>% droplevels()
-rownames(data.shallow)<-  data.between[data.between$Zone == 'Shallow', 6]
+# Subset abundance data
+data.delta <- abundance %>% droplevels()
+rownames(data.delta)<-  data.between[, 6]
 
 # Looking for absent species
-which(colSums(data.shallow) == 0)
-data.shallow <- data.shallow[, -c(5, 11, 17, 37:38, 41, 48, 50, 57,
-                                  65:67, 71, 75, 83, 85, 88:89, 98:99,
-                                  101, 103)]
-
-# Mesophotic reefs
-data.meso <- data.between %>% filter(Zone == 'Mesophotic')%>% 
-  select(Abudefduf_troschelii:Zapteryx_exasperata) %>% droplevels()
-rownames(data.meso)<- data.between[data.between$Zone == 'Mesophotic', 6]
-
-# Looking for absent species
-which(colSums(data.meso) == 0)
-data.meso <- data.meso[, -c(1, 3, 5, 16:17, 19:20, 25, 30:31, 33:35,
-                            43, 45, 48, 50, 53:55, 57, 63:64, 67:68,
-                            74, 77:79, 80:82, 89, 91, 93, 102)]
+absent <- which(colSums(data.delta) == 0)
+data.delta <- data.delta[, -c(absent)]
 
 # Estimation of taxonomic distances
 # Shallow reefs
-taxdis.shallow <- taxonomy[rownames(taxonomy) %in%
-                             colnames(data.shallow), ] %>% 
+taxdis.delta <- taxonomy[rownames(taxonomy) %in%
+                             colnames(data.delta), ] %>% 
   taxa2dist(., varstep = TRUE)
 
-# Mesophotic reefs
-taxdis.meso <- taxonomy[rownames(taxonomy) %in%
-                          colnames(data.meso), ] %>% 
-  taxa2dist(., varstep = TRUE)
 
 # -------------------------------------------------------------- ####
 # "varstep" argument determines whether the path length between two
@@ -153,19 +135,12 @@ taxdis.meso <- taxonomy[rownames(taxonomy) %in%
 # -------------------------------------------------------------- ####
 
 # Estimation of taxonomic distinctness
-
-# Shallow reefs
-tax.shallow <- taxondive(data.shallow, taxdis.shallow)
-delta.shallow<- tax.shallow$Dstar %>% as.data.frame()
-
-# Mesophotic reefs
-tax.meso <- taxondive(data.meso, taxdis.meso)
-delta.meso <- tax.meso$Dstar %>% as.data.frame()
-delta.meso[is.na(delta.meso)] <- 0.0001 # To avoid "non-positive" values in glmm
+tax.delta <- taxondive(data.delta, taxdis.delta)
+delta <- tax.delta$Dstar %>% as.data.frame()
+delta[is.na(delta)] <- 0.0001 # To avoid "non-positive" values in glmm
 
 # Merging data
-delta.data <- rbind(delta.shallow, delta.meso) %>%
-  rownames_to_column(., 'Video.transect') %>%
+delta.data <- delta %>% rownames_to_column(., 'Video.transect') %>%
   rename(Distinctness = ".")
 diversity.metrics <- diversity.metrics %>%
   left_join(delta.data, by = 'Video.transect')
