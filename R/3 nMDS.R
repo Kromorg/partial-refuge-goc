@@ -114,7 +114,7 @@ zone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
   stat_ellipse(level = 0.95)+
   labs(x = NULL, y = "nMDS2")+
   annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
-           size = 15) +
+           size = 10) +
   xlim(-2.5, 7.5) + ylim(-1.1, 1.1) +
   theme_bw(base_size = 25) +
   theme(panel.grid = element_blank())
@@ -123,12 +123,12 @@ forms <- c("Mesophotic" = 16, "Shallow" = 17)
 
 # Sites plot
 Sites_plot <- ggplot(gg, aes(MDS1, MDS2, color = Site, shape = Zone)) +
-  scale_colour_manual(values = c("#27408B", "#8B0000", "#989823")) +
+  scale_colour_manual(values = c("#239898", "#989823", "#982398")) +
   geom_point(size = 4) +
   scale_shape_manual(values = forms) +
   labs(x = "nMDS1", y = "nMDS2") +
   annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
-           size = 15) +
+           size = 10) +
   xlim(-2.5, 7.5) + ylim(-1.1, 1.1)+
   labs(shape = "Site") + guides(shape = guide_legend(title = "Zone")) +
   theme_bw(base_size = 25) +
@@ -140,7 +140,7 @@ bzone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
   geom_point(size = 3)+
   labs(x = "nMDS1", y = "nMDS2")+
   annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
-           size = 15) +
+           size = 10) +
   xlim(-2.5, 7.5) + ylim(-1.1, 1.1) +
   theme_bw(base_size = 25) +
   theme(panel.grid = element_blank())
