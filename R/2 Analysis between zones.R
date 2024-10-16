@@ -136,12 +136,12 @@ taxdis.delta <- taxonomy[rownames(taxonomy) %in%
 
 # Estimation of taxonomic distinctness
 tax.delta <- taxondive(data.delta, taxdis.delta)
-delta <- tax.delta$Dstar %>% as.data.frame()
-delta[is.na(delta)] <- 0.0001 # To avoid "non-positive" values in glmm
+delta <-  data.frame(tax.delta[c('Dstar', 'sd.Dplus', 'EDstar')])
+delta$Dstar[is.na(delta$Dstar)] <- 0.0001 # To avoid "non-positive" values in glmm
 
 # Merging data
 delta.data <- delta %>% rownames_to_column(., 'Video.transect') %>%
-  rename(Distinctness = ".")
+  rename(Distinctness = "Dstar")
 diversity.metrics <- diversity.metrics %>%
   left_join(delta.data, by = 'Video.transect')
 
