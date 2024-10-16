@@ -34,9 +34,6 @@ fori<- ggplot(diversity.metrics,
              show.legend = F)+
   scale_colour_manual(values = c('darkred', 'royalblue4'))+
   ylim(0, 0.40)+ labs(y = 'FOri')+
-  stat_summary(fun = mean, geom = "point", col = "black",
-               size = 9, fill = 'black', shape = 23,
-               aes(group = Zone))+
   annotate('text', x = 1, y = 0.4, label = 'B)',
            size = 15)+
   theme_classic(base_size = 25)+
@@ -66,7 +63,7 @@ ggsave('Figs/Figure 4.tiff', plot = multi, width = 6560, height = 3440,
 
 
 # Taxonomic diversity graph
-rich<- ggplot(diversity.metrics,
+rich <- ggplot(diversity.metrics,
               aes(x = Site, y = Richness, colour = Zone))+
   geom_boxplot(show.legend = F, size = 1.5)+
   geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
@@ -84,7 +81,7 @@ rich<- ggplot(diversity.metrics,
         axis.text.x = element_blank())
 
 # Taxonomic entropy graph
-entro<- ggplot(diversity.metrics,
+entro <- ggplot(diversity.metrics,
                aes(x = Site, y = Tax.Entro, colour = Zone))+
   geom_boxplot(show.legend = F, size = 1.5)+
   geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
@@ -92,7 +89,44 @@ entro<- ggplot(diversity.metrics,
   scale_colour_manual(values = c('darkred', 'royalblue4'))+
   scale_y_continuous(limits = c(1, 13), breaks = seq(1, 13, 3))+
   labs(y = 'Entropy')+
-  annotate('text', x = 1, y = 13, label = 'C)*',
+  annotate('text', x = 1, y = 13, label = 'B)*',
+           size = 15)+
+  theme_classic(base_size = 25)+
+  theme(legend.text = element_text(size = 28),
+        legend.title = element_text(size = 30))
+
+# Taxonomic distinctness graph
+delta <- ggplot(diversity.metrics,
+               aes(x = Site, y = Distinctness, colour = Zone))+
+  geom_boxplot(show.legend = F, size = 1.5)+
+  geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
+             show.legend = F)+
+  scale_colour_manual(values = c('darkred', 'royalblue4'))+
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20))+
+  labs(title = expression(Phylogenetic~diversity))+
+  labs(y = 'Distinctness')+
+  annotate('text', x = 1, y = 100, label = 'C)',
+           size = 15)+
+  theme_classic(base_size = 25)+
+  theme(legend.text = element_text(size = 28),
+        legend.title = element_text(size = 30))
+
+# Taxonomic distinctness funnel plot
+funnel <- ggplot(diversity.metrics,
+               aes(x = Richness, y = Distinctness, colour = Zone))+
+  geom_point(size = 5.5, alpha = 0.4, position = 'jitter',
+             show.legend = F)+
+  scale_colour_manual(values = c('darkred', 'royalblue4'))+
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20))+
+  geom_hline(yintercept = diversity.metrics$EDstar,
+            color = 'black',
+            linetype = 'dashed')+
+  geom_ribbon(aes(x = Richness, colour = NULL,
+                  ymin = EDstar - 2*sd.Dplus,
+                  ymax = EDstar + 2*sd.Dplus),
+              alpha = 0.2, show.legend = F)+
+  labs(y = 'Distinctness')+
+  annotate('text', x = 5, y = 100, label = 'D)',
            size = 15)+
   theme_classic(base_size = 25)+
   theme(legend.text = element_text(size = 28),
@@ -107,10 +141,7 @@ fd.rich<- ggplot(diversity.metrics,
   scale_colour_manual(values = c('darkred', 'royalblue4'))+
   scale_y_continuous(limits = c(1, 6), breaks = seq(1, 6, 1))+
   labs(title = expression(Functional~diversity))+
-  stat_summary(fun = mean, geom = "point", col = "black",
-               size = 9, fill = 'black', shape = 23,
-               aes(group = Zone))+
-  annotate('text', x = 1, y = 6, label = 'B)',
+  annotate('text', x = 1, y = 6, label = 'E)',
            size = 15)+
   theme_classic(base_size = 25)+
   theme(legend.text = element_text(size = 28),
@@ -126,20 +157,17 @@ fd.entro<- ggplot(diversity.metrics,
              show.legend = F)+
   scale_colour_manual(values = c('darkred', 'royalblue4'))+
   ylim(1, 5)+
-  stat_summary(fun = mean, geom = "point", col = "black",
-               size = 9, fill = 'black', shape = 23,
-               aes(group = Zone))+
-  annotate('text', x = 1, y = 5, label = 'D)',
+  annotate('text', x = 1, y = 5, label = 'F)',
            size = 15)+
   theme_classic(base_size = 25)+
   theme(legend.text = element_text(size = 28),
         legend.title = element_text(size = 30),
         axis.title.y = element_blank())
 
-hill <- grid.arrange(rich, fd.rich, entro, fd.entro,
-                     ncol = 2, nrow = 2)
+hill <- grid.arrange(rich, delta, fd.rich, entro, funnel, fd.entro,
+                     ncol = 3, nrow = 2)
 
-ggsave('Figs/Figure 5.tiff', plot = hill, width = 5500, height = 4700,
+ggsave('Figs/Figure 5.tiff', plot = hill, width = 7000, height = 4700,
        compression = "lzw", units = 'px', dpi = 320)
 #ggsave(here:: here('Figs/Figure 4.tiff'), plot = hill, width = 5500,
 #       height = 4700, compression = "lzw", units = 'px', dpi = 320)
