@@ -119,6 +119,25 @@ zone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
   theme_bw(base_size = 25) +
   theme(panel.grid = element_blank())
 
+# Zone plot version 2 14/10/2024
+zone_plot_v2 <- ggplot() + 
+  geom_point(data = gg, aes(MDS1, MDS2, color = Zone), size = 2) + 
+  geom_point(data = gg, aes(x = mean.x, y = mean.y), size = 2.5, 
+             color = "black") + 
+  stat_ellipse(data = gg, aes(MDS1, MDS2, fill = Zone), level = 0.95, 
+               geom = "polygon", alpha = 0.3, color = NA) +
+  scale_colour_manual(values = c("#27408B", "#8B0000")) + 
+  scale_fill_manual(values = c("#27408B", "#8B0000")) +
+  labs(x = NULL, y = "nMDS2") + 
+  annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
+           size = 10) + 
+  xlim(-2.5, 7.5) + ylim(-1.1, 1.1) + 
+  theme_bw(base_size = 25) + 
+  theme(panel.grid = element_blank())
+
+ggsave('Figs/Figure 2.tiff', plot = zone_plot_v2, width = 5350,
+       height = 3000, units = 'px', dpi = 320, compression = "lzw")
+
 forms <- c("Mesophotic" = 16, "Shallow" = 17)
 
 # Sites plot
@@ -145,9 +164,9 @@ bzone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
   theme_bw(base_size = 25) +
   theme(panel.grid = element_blank())
 
-nmds_plots <- grid.arrange(zone_plot, Sites_plot, ncol = 1, nrow = 2)
+#nmds_plots <- grid.arrange(zone_plot, Sites_plot, ncol = 1, nrow = 2)
 
-ggsave('Figs/Figure 2.tiff', plot = nmds_plots, width = 5350,
-       height = 4000, units = 'px', dpi = 320, compression = "lzw")
+#ggsave('Figs/Figure 2.tiff', plot = nmds_plots, width = 5350,
+#       height = 4000, units = 'px', dpi = 320, compression = "lzw")
 #ggsave(here:: here('Figs/Figure 1.tiff'), plot = multi, width = 5350,
 #       height = 4000, units = 'px', dpi = 320, compression = "lzw")
