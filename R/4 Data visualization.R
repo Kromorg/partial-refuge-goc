@@ -12,6 +12,11 @@ diversity.metrics <- read.csv('Data/Diversity_indices.csv',
 #origin <- read.csv(here:: here('Data/Diversity_indices.csv'),
 #                   header = T, stringsAsFactors = T)
 
+# Change zone data into factor type
+diversity.metrics$Zone<- factor(diversity.metrics$Zone,
+                           levels = c('Shallow', 'Mesophotic'),
+                           ordered = T)
+
 # Functional richness graph
 fric<- ggplot(diversity.metrics,
               aes(x = Site, y = FRic, colour = Zone))+
@@ -104,8 +109,8 @@ delta <- ggplot(diversity.metrics,
   scale_colour_manual(values = c('darkred', 'royalblue4'))+
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20))+
   labs(title = expression(Phylogenetic~diversity))+
-  labs(y = 'Distinctness')+
-  annotate('text', x = 1, y = 100, label = 'C)',
+  labs(y = 'Taxonomic distinctness')+
+  annotate('text', x = 1, y = 100, label = 'E)',
            size = 15)+
   theme_classic(base_size = 25)+
   theme(legend.text = element_text(size = 28),
@@ -125,8 +130,8 @@ funnel <- ggplot(diversity.metrics,
                   ymin = EDstar - 2*sd.Dplus,
                   ymax = EDstar + 2*sd.Dplus),
               alpha = 0.2, show.legend = F)+
-  labs(y = 'Distinctness')+
-  annotate('text', x = 5, y = 100, label = 'D)',
+  labs(x = 'Species richness', y = 'Taxonomic distinctness')+
+  annotate('text', x = 5, y = 100, label = 'F)',
            size = 15)+
   theme_classic(base_size = 25)+
   theme(legend.text = element_text(size = 28),
@@ -141,12 +146,12 @@ fd.rich<- ggplot(diversity.metrics,
   scale_colour_manual(values = c('darkred', 'royalblue4'))+
   scale_y_continuous(limits = c(1, 6), breaks = seq(1, 6, 1))+
   labs(title = expression(Functional~diversity))+
-  annotate('text', x = 1, y = 6, label = 'E)',
+  annotate('text', x = 1, y = 6, label = 'C)',
            size = 15)+
+  labs(y = 'Richness')+
   theme_classic(base_size = 25)+
   theme(legend.text = element_text(size = 28),
         legend.title = element_text(size = 30),
-        axis.title.y = element_blank(),
         axis.title.x = element_blank(),
         axis.text.x = element_blank())
 
@@ -157,14 +162,14 @@ fd.entro<- ggplot(diversity.metrics,
              show.legend = F)+
   scale_colour_manual(values = c('darkred', 'royalblue4'))+
   ylim(1, 5)+
-  annotate('text', x = 1, y = 5, label = 'F)',
+  annotate('text', x = 1, y = 5, label = 'D)',
            size = 15)+
+  labs(y = 'Entropy')+
   theme_classic(base_size = 25)+
   theme(legend.text = element_text(size = 28),
-        legend.title = element_text(size = 30),
-        axis.title.y = element_blank())
+        legend.title = element_text(size = 30))
 
-hill <- grid.arrange(rich, delta, fd.rich, entro, funnel, fd.entro,
+hill <- grid.arrange(rich, fd.rich, delta, entro, fd.entro, funnel,
                      ncol = 3, nrow = 2)
 
 ggsave('Figs/Figure 5.tiff', plot = hill, width = 7000, height = 4700,
