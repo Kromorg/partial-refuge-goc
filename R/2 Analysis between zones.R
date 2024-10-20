@@ -16,7 +16,7 @@ system2('clear') # For Mac users
 # Open database ####
 origin <- read.csv('Data/Abundance_data.csv',
                    header = T, stringsAsFactors = T)
-#origin <- read.csv(here:: here('Data/Abundance data.csv'),
+#origin <- read.csv(here:: here('Data/Abundance_data.csv'),
 #                   header = T, stringsAsFactors = T)
 
 as_tibble(origin)
@@ -227,7 +227,7 @@ sub.traits<- traits[-c(39, 77, 79), ]
 # Load database with traits information ####
 types<- read.csv('Data/Traits_info.csv',
                  header = T, stringsAsFactors = T)
-#types<- read.csv(here:: here('Data/Traits info.csv'),
+#types<- read.csv(here:: here('Data/Traits_info.csv'),
 #                 header = T, stringsAsFactors = T)
 
 sp.tr.summary(tr_cat = types,
