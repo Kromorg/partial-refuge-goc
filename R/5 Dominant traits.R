@@ -3,7 +3,8 @@ pacman:: p_load(tidyverse, # Data wrangling
                 mFD) # Functional diversity
 
 rm(list = ls())
-shell('cls')
+shell('cls') # For Windows users
+system2('clear') # For Mac users
 
 # Open database ####
 origin <- read.csv('Data/Abundance_data.csv',
@@ -17,13 +18,8 @@ as_tibble(origin)
 origin$Year<- as.factor(origin$Year)
 as_tibble(origin)
 
-# Data between zones ####
-data.between<- origin %>%
-  filter(as.numeric(Year) >= '2021')
-
-
 # Set depth zones based on the light processing file ####
-data.between<- mutate(data.between,
+data.between<- mutate(origin,
                       Zone = ifelse(as.numeric(as.character(Initial_depth)) >= 21 &
                                       as.numeric(as.character(Final_depth)) >= 21 |
                                       as.numeric(as.character(Initial_depth)) >= 21 &
@@ -109,21 +105,18 @@ sum(sub.abundance.shallow$nbFE < 6) # Number of video-transects S< 6
 
 sub.abundance.shallow<- sub.abundance.shallow[, -104] # Delete row "nbFE"
 
-which(colSums(sub.abundance.shallow) == 0) # Which species are absent due to deleting
-sub.abundance.shallow<- sub.abundance.shallow[,-c(5, 11, 17, 37:38, 41,
-                           48, 50, 57, 65:67, 71, 75, 83, 85, 88:89, 98,
-                           99, 101, 103)] # Delete those species
+absent <- which(colSums(sub.abundance.shallow) == 0) # Which species are absent due to deleting
+sub.abundance.shallow<- sub.abundance.shallow[,-c(absent)] # Delete those species
 which(colSums(sub.abundance.shallow) == 0) # No longer absent species
 
 
-sub.traits.shallow<- traits[-c(5, 11, 17, 37:38, 41, 48, 50, 57, 65:67,
-                               71, 75, 83, 85, 88:89, 98, 99, 101, 103), ]
+sub.traits.shallow<- traits[-c(absent), ]
 
 
 # Load database with traits information ####
-types<- read.csv('Data/Traits info.csv',
+types<- read.csv('Data/Traits_info.csv',
                  header = T, stringsAsFactors = T)
-#types<- read.csv(here:: here('Data/Traits info.csv'),
+#types<- read.csv(here:: here('Data/Traits_info.csv'),
 #                 header = T, stringsAsFactors = T)
 
 sp.tr.summary(tr_cat = types,
@@ -156,18 +149,12 @@ sum(sub.abundance.mesophotic$nbFE < 6) # Number of video-transects S< 6
 
 sub.abundance.mesophotic<- sub.abundance.mesophotic[, -104] # Delete row "nbFE"
 
-which(colSums(sub.abundance.mesophotic) == 0) # Which species are absent due to deleting
-sub.abundance.mesophotic<- sub.abundance.mesophotic[,-c(1, 3, 5, 16:17,
-                             19:20, 25, 28, 30:31, 33:35, 41, 43:45, 48,
-                             50, 53:55, 57, 63:64, 67:68, 74, 77:79,
-                             80:83, 85, 89, 90:91, 93, 102)] # Delete those species
+absent <- which(colSums(sub.abundance.mesophotic) == 0) # Which species are absent due to deleting
+sub.abundance.mesophotic<- sub.abundance.mesophotic[,-c(absent)] # Delete those species
 which(colSums(sub.abundance.mesophotic) == 0) # No longer absent species
 
 
-sub.traits.mesophotic<- traits[-c(1, 3, 5, 16:17, 19:20, 25, 28, 30:31,
-                                  33:35, 41, 43:45, 48, 50, 53:55, 57,
-                                  63:64, 67:68, 74, 77:79, 80:83, 85,
-                                  89, 90:91, 93, 102), ]
+sub.traits.mesophotic<- traits[-c(absent), ]
 
 sp.tr.summary(tr_cat = types,
               sp_tr = sub.traits.mesophotic)
