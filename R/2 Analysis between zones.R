@@ -357,7 +357,7 @@ labels_fig_cv <- c("No. spp.", "No. FE", "Vol.")
 tiff(filename = "Figs/Figure 3.tiff", height = 7500, width = 5700,
      compression = "lzw", antialias = 'cleartype', res = 320,
      pointsize = 36)
-#tiff(filename = here:: here("Figs/Figure 2.tiff"), height = 7500,
+#tiff(filename = here:: here("Figs/Figure 3.tiff"), height = 7500,
 #     width = 5700, compression = "lzw", antialias = 'cleartype',
 #     res = 320, pointsize = 36)
 
@@ -453,9 +453,9 @@ fdiv.plot<- alpha.fd.multidim(
                   asb2 =  '#27408B'))
 fdiv.plot
 
-ggsave('Figs/Appendix S3.tiff', width = 4280, height = 3536,
+ggsave('Figs/Appendix S4.tiff', width = 4280, height = 3536,
        compression = "lzw", units = 'px',  dpi = 320)
-#ggsave(here:: here('Figs/FEs distribution.tiff'), width = 4280,
+#ggsave(here:: here('Figs/Appendix S4.tiff'), width = 4280,
 #        height = 3536, compression = "lzw", units = 'px',  dpi = 320)
 
 
