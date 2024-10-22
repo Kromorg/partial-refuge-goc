@@ -127,7 +127,7 @@ venn.plot.site <- ggplot()+
 multi <- grid.arrange(venn.plot.zone, venn.plot.site,
                       ncol = 1, nrow = 2)
 
-ggsave('Figs/Appendix S5.tiff', plot = multi, width = 5000,
+ggsave('Figs/Appendix S4.tiff', plot = multi, width = 5000,
        height = 7000, units = 'px', dpi = 320, compression = "lzw")
 #ggsave('Figs/Appendix S5.tiff', plot = multi, width = 1500,
 #       height = 3000, units = 'px', dpi = 320, compression = "lzw")
