@@ -1,7 +1,8 @@
 # Open libraries y clean console ####
 pacman::p_load(tidyverse, # Data wrangling
                vegan, # nMDS (distance calculation)
-               gridExtra) # Multiple plots
+               gridExtra, # Multiple plots
+               ggrepel) # Plotting text format
 
 rm(list = ls())
 shell('cls') # For Windows users
@@ -78,7 +79,17 @@ factors_filtered <- factors[-rows_to_delete, ]
 
 # Join data ####
 full_data <- cbind(factors_filtered, abundance_filtered)
-write_csv(full_data, "Data/nMDS_data.csv")
+#write_csv(full_data, "Data/nMDS_data.csv")
+
+# Add substrate data
+substrate_data <- read.csv('Data/Substrate_data.csv', 
+                           sep = ",", header = TRUE, stringsAsFactors = FALSE)
+data_combined <- merge(full_data, substrate_data, by = "Video.transect", 
+                       all.x = TRUE)
+
+# Substrate matrix
+substrate<- data_combined[, c(104:110)]
+rownames(substrate)<- data_combined[, 1]
 
 # Fourth root transformation ####
 transf<- abundance_filtered^0.25
@@ -91,6 +102,23 @@ nMDS.drrh<- metaMDS(comm = distance, trace = F,
                     autotransform = F)
 stress<- round(nMDS.drrh$stress, 2)
 stress
+
+# Adjust vectors 
+substrate_fit <- envfit(nMDS.drrh, substrate, perm = 999)
+
+# Results
+print(substrate_fit)
+
+# Extract vectors coordenates 
+substrate_scores <- as.data.frame(scores(substrate_fit, display = "vectors"))
+substrate_scores$variables <- rownames(substrate_scores)
+
+# Scale factor
+scaling_factor <- 7 
+
+# Scale vectors coordenates
+substrate_scores$NMDS1 <- substrate_scores$NMDS1 * scaling_factor
+substrate_scores$NMDS2 <- substrate_scores$NMDS2 * scaling_factor
 
 # Add data to MDS.coord df
 MDS.coord<- data.frame(nMDS.drrh$points)
@@ -105,68 +133,35 @@ gg <- merge(MDS.coord,
             aggregate(cbind(mean.x = MDS1, mean.y = MDS2) ~ Zone,
                       MDS.coord, mean), by = "Zone")
 
-# Zone Plot 
-zone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
-  scale_colour_manual(values = c("#27408B", "#8B0000"))+
-  geom_point(size = 2)+
-  geom_segment(aes(x = mean.x, y = mean.y, xend = MDS1, yend = MDS2))+
-  geom_point(aes(x = mean.x, y = mean.y), size = 2.5, color = "black")+
-  stat_ellipse(level = 0.95)+
-  labs(x = NULL, y = "nMDS2")+
-  annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
-           size = 10) +
-  xlim(-2.5, 7.5) + ylim(-1.1, 1.1) +
-  theme_bw(base_size = 25) +
-  theme(panel.grid = element_blank())
-
-# Zone plot version 2 14/10/2024
-zone_plot_v2 <- ggplot() + 
-  geom_point(data = gg, aes(MDS1, MDS2, color = Zone), size = 2) + 
-  geom_point(data = gg, aes(x = mean.x, y = mean.y), size = 2.5, 
-             color = "black") + 
+# Zone Plot
+zone_plot <- ggplot() + 
+  geom_point(data = gg, aes(MDS1, MDS2, color = Zone), size = 2.5) + 
   stat_ellipse(data = gg, aes(MDS1, MDS2, fill = Zone), level = 0.95, 
                geom = "polygon", alpha = 0.3, color = NA) +
   scale_colour_manual(values = c("#27408B", "#8B0000")) + 
   scale_fill_manual(values = c("#27408B", "#8B0000")) +
-  labs(x = NULL, y = "nMDS2") + 
-  annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
+  labs(x="nMDS1", y="nMDS2")+ 
+  annotate("text", x = 1.25, y = 0.85, label = paste("Stress =", stress),
            size = 10) + 
-  xlim(-2.5, 7.5) + ylim(-1.1, 1.1) + 
+  xlim(-2, 2) + ylim(-1, 1) + 
   theme_bw(base_size = 25) + 
   theme(panel.grid = element_blank())
 
-ggsave('Figs/Figure 2.tiff', plot = zone_plot_v2, width = 5350,
+# Plot substrate vectors 
+
+zone_substrate_plot <- zone_plot + 
+  geom_segment(data = substrate_scores, aes(x = 0, xend = NMDS1, 
+                                            y = 0, yend = NMDS2), 
+               arrow = arrow(length = unit(0.3, "cm")), 
+               color = "black", 
+               size = 1) +
+  geom_text_repel(data = substrate_scores, aes(x = NMDS1 * (1.2), 
+                                               y = NMDS2 * (1.2), 
+                                               label = variables), 
+                  size = 7, nudge_x = 0.06, nudge_y = 0.02,
+                  segment.color = NA)
+
+ggsave('Figs/Figure 2.tiff', plot = zone_substrate_plot, width = 4350,
        height = 3000, units = 'px', dpi = 320, compression = "lzw")
-
-forms <- c("Mesophotic" = 16, "Shallow" = 17)
-
-# Sites plot
-Sites_plot <- ggplot(gg, aes(MDS1, MDS2, color = Site, shape = Zone)) +
-  scale_colour_manual(values = c("#239898", "#989823", "#982398")) +
-  geom_point(size = 4) +
-  scale_shape_manual(values = forms) +
-  labs(x = "nMDS1", y = "nMDS2") +
-  annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
-           size = 10) +
-  xlim(-2.5, 7.5) + ylim(-1.1, 1.1)+
-  labs(shape = "Site") + guides(shape = guide_legend(title = "Zone")) +
-  theme_bw(base_size = 25) +
-  theme(panel.grid = element_blank())
-
-# Basic Zone Plot 
-bzone_plot <- ggplot(gg, aes(MDS1, MDS2, color = Zone))+
-  scale_colour_manual(values = c("#27408B", "#8B0000"))+
-  geom_point(size = 3)+
-  labs(x = "nMDS1", y = "nMDS2")+
-  annotate("text", x = 5, y = -1, label = paste("Stress =", stress),
-           size = 10) +
-  xlim(-2.5, 7.5) + ylim(-1.1, 1.1) +
-  theme_bw(base_size = 25) +
-  theme(panel.grid = element_blank())
-
-#nmds_plots <- grid.arrange(zone_plot, Sites_plot, ncol = 1, nrow = 2)
-
-#ggsave('Figs/Figure 2.tiff', plot = nmds_plots, width = 5350,
-#       height = 4000, units = 'px', dpi = 320, compression = "lzw")
-#ggsave(here:: here('Figs/Figure 1.tiff'), plot = multi, width = 5350,
-#       height = 4000, units = 'px', dpi = 320, compression = "lzw")
+#ggsave(here:: here('Figs/Figure 2.tiff'), plot = multi, width = 4350,
+#       height = 3000, units = 'px', dpi = 320, compression = "lzw")
