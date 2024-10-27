@@ -60,20 +60,8 @@ long.abund$Zone <- for (n in 1:length(long.abund$Video.transect)) {
   }
 }
 
-# Add site data
-long.abund$Site <- for (n in 1:length(long.abund$Video.transect)) {
-  actual <- long.abund$Video.transect[n]
-  extant <- which(data.between$Video.transect == actual)
-  if(length(extant) > 0){
-    value <- data.between$Site[extant]
-    long.abund[n, 5] <- value
-  } else {
-    long.abund[n, 5] <-  NA
-  }
-}
-
-long.abund <- long.abund %>% rename(Zone = 'V4', Site = 'V5') %>% 
-  select(Zone, Site, Species)
+long.abund <- long.abund %>% rename(Zone = 'V4') %>% 
+  select(Zone, Species)
 
 venn.zone <- list(Shallow = unique(long.abund[long.abund$Zone == 'Shallow', 3]),
                    Mesophotic = unique(long.abund[long.abund$Zone == 'Mesophotic', 3]))
@@ -87,49 +75,17 @@ venn.plot.zone <- ggplot()+
             data = venn_setedge(venn.data), 
             show.legend = F)+
   geom_text(aes(X, Y, label = name), 
-            data = venn_setlabel(venn.data), size = 15)+
+            data = venn_setlabel(venn.data), size = 5)+
   geom_label(aes(X, Y, label = paste0(count, " (", scales::percent(count/sum(count), accuracy = 2), ")")), 
-             data = venn_regionlabel(venn.data), size = 15) +
+             data = venn_regionlabel(venn.data), size = 5) +
   scale_x_continuous(limits = c(-10, 5))+
   scale_fill_manual(values = c('darkred', 'darkslateblue', 'royalblue4'))+
   coord_equal()+
   theme_void()
 
-venn.site <- list(Bajo_Shallow = unique(long.abund[long.abund$Zone == 'Shallow' &
-                                                     long.abund$Site == 'El Bajo', 3]),
-                  Lobos_Shallow = unique(long.abund[long.abund$Zone == 'Shallow'&
-                                                      long.abund$Site == 'Punta Lobos', 3]),
-                  Islotes_Shallow = unique(long.abund[long.abund$Zone == 'Shallow'&
-                                                      long.abund$Site == 'Los Islotes', 3]),
-                  Bajo_Meso = unique(long.abund[long.abund$Zone == 'Mesophotic'&
-                                                   long.abund$Site == 'El Bajo', 3]),
-                  Lobos_Meso = unique(long.abund[long.abund$Zone == 'Mesophotic'&
-                                                  long.abund$Site == 'Punta Lobos', 3]),
-                  Islotes_Meso = unique(long.abund[long.abund$Zone == 'Mesophotic'&
-                                                  long.abund$Site == 'Los Islotes', 3]))
-
-venn.data <- venn.site %>% Venn() %>% process_data()
-venn.plot.site <- ggplot()+
-  geom_polygon(aes(X, Y, fill = id, group = id), 
-               data = venn_regionedge(venn.data), 
-               show.legend = F)+
-  geom_path(aes(X, Y, color = id, group = id), 
-            data = venn_setedge(venn.data), 
-            show.legend = F)+
-  geom_text(aes(X, Y, label = name), 
-            data = venn_setlabel(venn.data), size = 5)+
-  geom_label(aes(X, Y, label = paste0(count, " (", scales::percent(count/sum(count), accuracy = 2), ")")), 
-             data = venn_regionlabel(venn.data), size = 5) +
-  scale_x_continuous(limits = c(-125, 1250))+
-  coord_equal()+
-  theme_void()
-
-multi <- grid.arrange(venn.plot.zone, venn.plot.site,
-                      ncol = 1, nrow = 2)
-
-ggsave('Figs/Appendix S4.tiff', plot = multi, width = 5000,
-       height = 7000, units = 'px', dpi = 320, compression = "lzw")
-#ggsave('Figs/Appendix S5.tiff', plot = multi, width = 1500,
+ggsave('Figs/Appendix S4.tiff', plot = venn.plot.zone, width = 1500,
+       height = 1500, units = 'px', dpi = 320, compression = "lzw")
+#ggsave('Figs/Appendix S5.tiff', plot = venn.plot.zone, width = 1500,
 #       height = 3000, units = 'px', dpi = 320, compression = "lzw")
 
 # Open database ####

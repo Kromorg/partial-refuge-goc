@@ -354,11 +354,11 @@ names(cols) <- zone
 
 labels_fig_cv <- c("No. spp.", "No. FE", "Vol.")
 
-tiff(filename = "Figs/Figure 3.tiff", height = 7500, width = 5700,
+tiff(filename = "Figs/Figure 3.tiff", height = 7500, width = 5200,
      compression = "lzw", antialias = 'cleartype', res = 320,
      pointsize = 36)
 #tiff(filename = here:: here("Figs/Figure 3.tiff"), height = 7500,
-#     width = 5700, compression = "lzw", antialias = 'cleartype',
+#     width = 5200, compression = "lzw", antialias = 'cleartype',
 #     res = 320, pointsize = 36)
 
 # x11()
