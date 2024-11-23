@@ -9,7 +9,7 @@ shell('cls') # For Windows users
 system2('clear') # For Mac users
 
 # Open database ####
-origin<- read.csv('Data/Abundance data.csv',
+origin<- read.csv('Data/Abundance_data.csv',
                   header = T, stringsAsFactors = T)
 #origin <- read.csv(here:: here('Data/Diversity_indices.csv'),
 #                   header = T, stringsAsFactors = T)
@@ -103,8 +103,12 @@ nMDS.drrh<- metaMDS(comm = distance, trace = F,
 stress<- round(nMDS.drrh$stress, 2)
 stress
 
-# Adjust vectors 
-substrate_fit <- envfit(nMDS.drrh, substrate, perm = 999)
+# Convert NAs
+substrate_clean <- substrate
+substrate_clean[is.na(substrate_clean)] <- 0
+
+# Luego ejecuta envfit con los datos limpios
+substrate_fit <- envfit(nMDS.drrh, substrate_clean, perm = 999)
 
 # Results
 print(substrate_fit)
