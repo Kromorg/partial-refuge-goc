@@ -116,6 +116,7 @@ print(substrate_fit)
 # Extract vectors coordenates 
 substrate_scores <- as.data.frame(scores(substrate_fit, display = "vectors"))
 substrate_scores$variables <- rownames(substrate_scores)
+substrate_scores$variables <- gsub("_", " ", substrate_scores$variables)
 
 # Scale factor
 scaling_factor <- 7 
@@ -147,7 +148,7 @@ zone_plot <- ggplot() +
   labs(x="nMDS1", y="nMDS2")+ 
   annotate("text", x = 1.25, y = 0.85, label = paste("Stress =", stress),
            size = 10) + 
-  xlim(-2, 2) + ylim(-1, 1) + 
+  xlim(-2, 2) + ylim(-1.1, 1.1) + 
   theme_bw(base_size = 25) + 
   theme(panel.grid = element_blank())
 
