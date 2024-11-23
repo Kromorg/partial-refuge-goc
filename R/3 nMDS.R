@@ -107,7 +107,7 @@ stress
 substrate_clean <- substrate
 substrate_clean[is.na(substrate_clean)] <- 0
 
-# Luego ejecuta envfit con los datos limpios
+# Run envfit with clean data
 substrate_fit <- envfit(nMDS.drrh, substrate_clean, perm = 999)
 
 # Results
